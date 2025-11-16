@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ficha de sesión — Formulario + Vista Markdown</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+
+  <style>
+    :root{
+      /* Claro */
+      --bg-1: #f7f9fc;
+      --bg-2: #eef2f7;
+      --card: #ffffff;
+      --fg: #0b1220;
+      --muted: #627084;
+      --accent-1: #0ea5e9;
+      --accent-2: #22c55e;
+      --glass: rgba(2,6,23,0.05);
+      --glass-2: rgba(2,6,23,0.03);
+      --radius: 12px;
+      --maxw: 1200px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+      --shadow: 0 10px 30px rgba(2,6,23,0.08);
+      --border: rgba(2,6,23,0.08);
+      --rendered: #1d2838;
+      --rendered-strong: #0b1220;
+    }
+    [data-theme="dark"]{
+      --bg-1: #071128;
+      --bg-2: #071323;
+      --card: #071827;
+      --fg: #e6eef6;
+      --muted: #9aa4b2;
+      --accent-1: #6ee7b7;
+      --accent-2: #60a5fa;
+      --glass: rgba(255,255,255,0.04);
+      --glass-2: rgba(255,255,255,0.02);
+      --shadow: 0 10px 30px rgba(2,6,23,0.6);
+      --border: rgba(255,255,255,0.06);
+      --rendered: #d8e6f2;
+      --rendered-strong: #ffffff;
+    }
+
+    html{height:100%}
+
+    @keyframes background-pan {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    body{
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      margin:0;
+      background-color: var(--bg-1); /* Color base sólido */
+      color:var(--fg);
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:24px;
+      box-sizing:border-box;
+      position: relative; /* Necesario para el pseudo-elemento */
+      overflow-x: hidden; /* Evita barras de scroll por el fondo */
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 80% at 20% 20%, var(--accent-1), transparent),
+        radial-gradient(ellipse 60% 70% at 80% 70%, var(--accent-2), transparent),
+        radial-gradient(ellipse 100% 100% at 50% 100%, var(--bg-1) 30%, var(--bg-2) 100%);
+      background-size: 200% 200%;
+      opacity: 0.3;
+      animation: background-pan 25s ease-in-out infinite;
+      transition: opacity 0.5s;
+    }
+
+    [data-theme="dark"] body::before {
+      opacity: 0.2;
+    }
+
+    .wrap{
+      width:100%;
+      max-width:var(--maxw);
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    header.top{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap
+    }
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{
+      width:44px;height:44px;border-radius:10px;
+      background: linear-gradient(135deg,var(--accent-1),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:#072;
+      box-shadow: var(--shadow);flex-shrink:0
+    }
+    .title{font-size:18px;font-weight:700;line-height:1}
+    .subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{
+      border:none;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer;
+      background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      color:#022;box-shadow:var(--shadow);white-space:nowrap
+    }
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .icon-btn{
+      display:flex;align-items:center;justify-content:center;
+      width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
+      background:transparent;color:var(--muted);cursor:pointer
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+      align-items:flex-start;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, var(--glass), var(--glass-2));
+      border-radius: var(--radius);
+      padding:16px;
+      box-shadow:var(--shadow);
+      min-height:520px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      border: 1px solid var(--border); /* Borde sutil para mejorar la definición */
+    }
+
+    form{display:flex;flex-direction:column;gap:12px}
+    .field{display:flex;gap:12px;align-items:flex-start}
+    label{width:150px;font-size:13px;color:var(--muted);padding-top:10px;flex-shrink:0}
+    .control{flex:1;display:flex;flex-direction:column;gap:6px}
+    input[type="text"], input[type="date"], textarea{
+      background:var(--glass);border:1px solid var(--border);
+      padding:10px 12px;border-radius:10px;color:inherit;font-size:14px;outline:none;
+      box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);width:100%;box-sizing:border-box
+    }
+    textarea{min-height:110px;resize:vertical}
+
+    .filename-composer{
+      display:flex;align-items:center;background:var(--glass);
+      border:1px solid var(--border);border-radius:10px;padding:0 12px
+    }
+    .filename-composer.invalid{border-color:#ff6b6b;box-shadow:0 0 0 2px rgba(255,107,107,.12)}
+    .filename-composer span{font-size:14px;color:var(--muted)}
+    #filetitle-input{flex:1;background:transparent;border:none;outline:none;color:inherit;padding:10px 8px;font-size:14px;min-width:100px}
+
+    .combo{position:relative;display:flex;align-items:center;gap:6px}
+    .combo input{flex:1}
+    .combo-toggle-btn{
+      border:1px solid var(--border);background:var(--glass);border-radius:10px;width:34px;height:34px;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted)
+    }
+    .combo-list{
+      position:absolute;top:100%;left:0;right:0;margin-top:6px;background:var(--card);
+      border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);
+      max-height:220px;overflow:auto;display:none;z-index:30
+    }
+    .combo-list.show{display:block}
+    .combo-item{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:8px 10px;cursor:pointer;color:var(--fg)
+    }
+    .combo-item:hover{background:var(--glass)}
+    .combo-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .combo-remove{border:none;background:transparent;color:var(--muted);cursor:pointer;padding:4px;margin-left:8px}
+
+    .preview-header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .tabs{display:flex;gap:8px}
+    .tab{padding:8px 10px;border-radius:10px;background:transparent;border:1px solid var(--border);cursor:pointer;color:var(--muted);font-weight:600}
+    .tab.active{background:var(--glass);color:inherit}
+
+    .preview{background:linear-gradient(180deg, var(--glass-2), var(--glass));padding:12px;border-radius:10px;overflow:auto;flex:1}
+    .rendered{color:var(--rendered);padding:8px}
+    .rendered h1{font-size:22px;margin:12px 0 8px;color:var(--accent-1)}
+    .rendered h2{font-size:18px;margin:8px 0 6px}
+    .rendered h3{font-size:16px;margin:8px 0 6px}
+    .rendered p{line-height:1.5;color:var(--rendered);margin:8px 0}
+    .rendered strong{color:var(--rendered-strong)}
+    .rendered ul{padding-left:20px}
+    .rendered hr{border:none;height:1px;background:var(--border);margin:16px 0}
+
+    pre.raw{
+      background:var(--card);padding:12px;border-radius:8px;color:var(--rendered);font-family:var(--mono);
+      overflow:auto;max-height:420px;white-space:pre-wrap;word-break:break-word;border:1px solid var(--border)
+    }
+
+    @media(max-width:980px){.layout{grid-template-columns:1fr}label{width:120px}}
+    @media(max-width:640px){body{padding:12px}.logo{width:40px;height:40px}label{width:auto;padding-top:0}.field{flex-direction:column;gap:4px}.controls{gap:6px}}
+  </style>
+</head>
+<body>
+  <div class="wrap" role="application">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">FS</div>
+        <div>
+          <div class="title">Ficha de sesión</div>
+          <div class="subtitle">Formulario + vista en vivo</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="themeToggle" class="icon-btn" title="Cambiar tema" aria-label="Cambiar tema">
+          <span class="iconify" data-icon="ph:moon-stars-bold" data-width="20" data-height="20"></span>
+        </button>
+        <button id="download" class="btn" title="Descargar archivo .txt">Descargar .txt</button>
+      </div>
+    </header>
+
+    <main class="layout" aria-live="polite">
+      <!-- Formulario -->
+      <section class="panel" aria-labelledby="formTitle">
+        <h2 id="formTitle" style="margin:0 0 6px 0">Formulario</h2>
+        <form id="sessionForm" autocomplete="off" onsubmit="return false;">
+          <div class="field">
+            <label for="date">Fecha</label>
+            <div class="control">
+              <input id="date" type="date" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="context">Contexto</label>
+            <div class="control">
+              <input id="context" type="text" placeholder="Ej: personal, acompañamiento">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="name">Paciente</label>
+            <div class="control">
+              <div class="combo" id="patientCombo">
+                <input id="name" type="text" placeholder="Ej: Sofía" autocomplete="off">
+                <button id="patientToggle" class="combo-toggle-btn" type="button" title="Mostrar pacientes guardados" aria-label="Mostrar pacientes guardados">
+                  <span class="iconify" data-icon="ph:list-bullets-bold" data-width="18" data-height="18"></span>
+                </button>
+                <div id="patientList" class="combo-list" role="listbox" aria-label="Pacientes guardados"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="summary">Puntos clave</label>
+            <div class="control">
+              <textarea id="summary" placeholder="Una idea por línea. Usa Tab para indentar."></textarea>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="prelude">Notas</label>
+            <div class="control">
+              <textarea id="prelude" placeholder="Preludio, cierre, observaciones..."></textarea>
+            </div>
+          </div>
+
+          <!-- Nombre de archivo -->
+          <div class="field">
+            <label for="filetitle-input">Nombre del archivo</label>
+            <div class="control">
+              <div class="filename-composer" id="filenameBox">
+                <span id="filename-prefix"></span>
+                <input id="filetitle-input" type="text" placeholder="Título de la sesión..." required minlength="2" spellcheck="true">
+                <span>.txt</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="reset" class="btn" type="button">Limpiar</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Preview / Markdown -->
+      <section class="panel" aria-labelledby="previewTitle">
+        <div class="preview-header">
+          <h2 id="previewTitle" style="margin:0">Vista en vivo</h2>
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="preview" role="tab">Preview</button>
+            <button class="tab" data-tab="markdown" role="tab">Markdown</button>
+          </div>
+        </div>
+
+        <div class="preview" id="previewArea">
+          <div id="rendered" class="rendered" aria-live="polite"></div>
+          <pre id="raw" class="raw" style="display:none"></pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Librerías -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+
+  <!-- Librería aislada: esTitleCase -->
+  <script>
+  (function(g){'use strict';const m={articulos:'el la los las lo un una unos unas',preps:'a ante bajo cabe con contra de del desde en entre hacia hasta para por según sin so sobre tras vía',conjs:'y e o u ni que pero mas sino aunque si',advMen:'no ya muy tan más aún solo aquí ahí allá acá hoy mañana ayer siempre nunca quizá quizás "tal vez" luego después antes',pronMen:'yo tú él ella ello eso esto esa ese aquel aquello',pronDeb:'me te se nos os',verbAux:'he has ha hemos han es fue era son está están estaba',contra:'al del'};const ts=s=>new Set(s.replace(/["']/g,'').split(/\s+/).filter(Boolean).map(w=>w.toLowerCase()));const MINOR=new Set([...ts(m.articulos),...ts(m.preps),...ts(m.conjs),...ts(m.advMen),...ts(m.pronMen),...ts(m.pronDeb),...ts(m.verbAux),...ts(m.contra)]);const PD=ts(m.pronDeb);function eTC(i=''){if(!i)return'';const t=(i+'').match(/([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+|[0-9]+|[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+)/g)||[],wI=[],ws=[];t.forEach((t,i)=>{if(/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+$/.test(t)){wI.push(i);ws.push(t.toLowerCase())}});const iP=new Array(t.length).fill(false),iQ=new Array(t.length).fill(false);for(let i=0;i<ws.length-1;i++){if(ws[i]==='por'&&(ws[i+1]==='que'||ws[i+1]==='qué')){iP[wI[i]]=true;iQ[wI[i+1]]=true}}let f=true;return t.map((t,i)=>{if(!/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+$/.test(t))return t;const l=t.toLowerCase();if(iP[i]){f=false;return'por'}if(iQ[i]){f=false;return'Qué'}if(f){f=false;return PD.has(l)?l:l.charAt(0).toUpperCase()+l.slice(1)}if(MINOR.has(l))return l;return l.charAt(0).toUpperCase()+l.slice(1)}).join('')}if(typeof module!=='undefined'&&module.exports){module.exports={esTitleCase:eTC}}else{g.esTitleCase=eTC}})(this);
+  </script>
+
+  <script>
+    // --- HELPERS E IDs ---
+    const $  = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
+
+    const STORAGE_KEY  = 'ficha_sesion_autosave_v12';
+    const PATIENTS_KEY = 'fs_patients_v8';
+    const THEME_KEY    = 'fs_theme_pref';
+
+    const form           = $('#sessionForm');
+    const dateEl         = $('#date');
+    const ctxEl          = $('#context');
+    const nameEl         = $('#name');
+    const summaryEl      = $('#summary');
+    const preludeEl      = $('#prelude');
+    const fileTitleInput = $('#filetitle-input');
+    const filenamePrefix = $('#filename-prefix');
+    const filenameBox    = $('#filenameBox');
+    const rendered       = $('#rendered');
+    const raw            = $('#raw');
+    const downloadBtn    = $('#download');
+    const resetBtn       = $('#reset');
+    const themeToggle    = $('#themeToggle');
+    const patientList    = $('#patientList');
+    const patientCombo   = $('#patientCombo');
+    const patientToggle  = $('#patientToggle');
+
+    // --- CONFIGURACIÓN LIBRERÍAS ---
+    marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
+
+    function escMd(s=''){
+      return s.replace(/([\\`*_{}[\]()<>\#+\-\|])/g, '\\$1');
+    }
+
+    function applyTitleCaseToInput(el){
+      const prev = el.value;
+      const formatted = esTitleCase(prev);
+      if(formatted !== prev){
+        const pos = el.selectionStart || formatted.length;
+        el.value = formatted;
+        try{ el.setSelectionRange(pos, pos); }catch{}
+      }
+    }
+
+    // --- GESTIÓN DE FECHAS ---
+    function toLocalDateInputValue(date = new Date()){
+      const tz = date.getTimezoneOffset() * 60000;
+      return new Date(date - tz).toISOString().slice(0,10);
+    }
+    function updateDatePrefix(){
+      const v = dateEl.value || toLocalDateInputValue();
+      filenamePrefix.textContent = `${v} `;
+    }
+    function setDefaultDate(){
+        dateEl.value = toLocalDateInputValue();
+        updateDatePrefix();
+    }
+
+    // --- GESTIÓN DE PACIENTES (Combobox) ---
+    function normalizePatientName(raw=''){ return String(raw||'').trim(); }
+    function cleanPatients(list){
+      const seen = new Set(), out=[];
+      for(const it of (list||[])){
+        if(typeof it !== 'string') continue;
+        const n = normalizePatientName(it);
+        if(!n || n.length<2) continue;
+        const k = n.toLowerCase();
+        if(!seen.has(k)){ seen.add(k); out.push(n); }
+      }
+      return out.sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+    }
+    function getPatients(){
+      try{
+        const data = JSON.parse(localStorage.getItem(PATIENTS_KEY)) || [];
+        const cleaned = cleanPatients(data);
+        if(JSON.stringify(cleaned)!==JSON.stringify(data)){
+          localStorage.setItem(PATIENTS_KEY, JSON.stringify(cleaned));
+        }
+        return cleaned;
+      }catch{ return []; }
+    }
+    function savePatients(list){ localStorage.setItem(PATIENTS_KEY, JSON.stringify(cleanPatients(list))); }
+    function addPatientIfNew(name){
+      const n = normalizePatientName(name);
+      if(n.length<2) return;
+      const list = getPatients();
+      if(!list.some(x=>x.toLowerCase()===n.toLowerCase())){
+        list.push(n); savePatients(list);
+      }
+    }
+    function removePatient(name){
+      savePatients(getPatients().filter(x=>x.toLowerCase()!==String(name||'').toLowerCase()));
+    }
+
+    function hidePatientDropdown(){
+      patientList.classList.remove('show');
+      patientList.innerHTML = '';
+    }
+
+    function renderPatientList(filter='', showAll=false){
+      const all = getPatients();
+      let items = [];
+      if(showAll){
+        items = all;
+      }else{
+        const f = (filter||'').trim().toLowerCase();
+        if(!f){ hidePatientDropdown(); return; }
+        items = all.filter(n=>n.toLowerCase().includes(f));
+      }
+      if(items.length===0){ hidePatientDropdown(); return; }
+
+      patientList.innerHTML = items.map(n => `
+        <div class="combo-item" data-name="${n.replace(/"/g,'&quot;')}" role="option" tabindex="-1">
+          <span class="combo-name">${n}</span>
+          <button class="combo-remove" type="button" title="Eliminar ${n}">
+            <span class="iconify" data-icon="ph:x-bold" data-width="16" data-height="16"></span>
+          </button>
+        </div>
+      `).join('');
+      patientList.classList.add('show');
+
+      patientList.querySelectorAll('.combo-item').forEach(el=>{
+        el.addEventListener('click', (e)=>{
+          if(e.target.closest('.combo-remove')) return;
+          const n = el.dataset.name;
+          nameEl.value = n;
+          hidePatientDropdown();
+          nameEl.dispatchEvent(new Event('input',{bubbles:true}));
+        });
+      });
+      patientList.querySelectorAll('.combo-remove').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const n = e.currentTarget.closest('.combo-item').dataset.name;
+          removePatient(n);
+          renderPatientList(nameEl.value, showAll);
+        });
+      });
+
+      window.Iconify?.scan?.(patientList);
+    }
+
+    // --- AUTOSAVE Y MANEJO DE DATOS DEL FORMULARIO ---
+    function getFormData(){
+      return {
+        date     : dateEl.value,
+        context  : ctxEl.value,
+        name     : nameEl.value,
+        summary  : summaryEl.value,
+        prelude  : preludeEl.value,
+        filetitle: fileTitleInput.value
+      };
+    }
+    function setFormData(d){
+      dateEl.value         = d.date    || toLocalDateInputValue();
+      ctxEl.value          = d.context || '';
+      nameEl.value         = d.name    || '';
+      summaryEl.value      = d.summary || '';
+      preludeEl.value      = d.prelude || '';
+      fileTitleInput.value = esTitleCase(d.filetitle || '');
+      updateDatePrefix();
+    }
+    let saveTimer=null;
+    function autosaveNow(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...getFormData(), savedAt: Date.now() }));
+    }
+    function scheduleAutosave(){ clearTimeout(saveTimer); saveTimer=setTimeout(autosaveNow,300); }
+
+    function clearForm() {
+      setDefaultDate();
+      ctxEl.value = '';
+      nameEl.value = '';
+      summaryEl.value = '';
+      preludeEl.value = '';
+      fileTitleInput.value = '';
+    }
+
+    // --- RENDERIZADO MARKDOWN ---
+    function formatList(text) {
+      if (!text || !text.trim()) return '- ';
+
+      return text.split(/\r?\n/).map(line => {
+        if (line.trim() === '') {
+            return null;
+        }
+        const indentationMatch = line.match(/^(\s*)/);
+        const indentation = indentationMatch ? indentationMatch[1] : '';
+        let content = line.trim();
+        const bulletMatch = content.match(/^([-*]\s+)/);
+        if (bulletMatch) {
+          const bullet = bulletMatch[0];
+          const textAfterBullet = content.substring(bullet.length);
+          return indentation + bullet + escMd(textAfterBullet);
+        } else {
+          return indentation + '- ' + escMd(content);
+        }
+      }).filter(line => line !== null).join('\n');
+    }
+
+    function buildMarkdown(){
+      const dateVal = new Date((dateEl.value || toLocalDateInputValue()) + 'T00:00:00');
+      const dstr    = dateVal.toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
+      const context = ctxEl.value.trim();
+      const name    = nameEl.value.trim();
+      const title   = esTitleCase((fileTitleInput.value || '').trim());
+      const summary = summaryEl.value || '';
+      const prelude = preludeEl.value || '';
+
+      const mdLines = [];
+      mdLines.push(`# ${title || 'Sesión'}`, '');
+      mdLines.push(`**Fecha:** ${escMd(dstr)}`);
+      if(name)    mdLines.push(`**Paciente:** ${escMd(name)}`);
+      if(context) mdLines.push(`**Contexto:** ${escMd(context)}`);
+      mdLines.push('', '---', '', '## Lo importante de la sesión', '', formatList(summary));
+      if(prelude.trim()){
+        mdLines.push('', '### Preludio / Notas', '');
+        mdLines.push(escMd(prelude));
+      }
+      const md = mdLines.join('\n');
+      return { md, title, dateVal };
+    }
+
+    function sanitizeFilename(name){
+      return name.replace(/[<>:"/\\|?*]+/g,'_').replace(/\s+/g,' ').trim();
+    }
+
+    function render(){
+      const { md } = buildMarkdown();
+      const html = DOMPurify.sanitize(marked.parse(md));
+      rendered.innerHTML = html;
+      raw.textContent = md;
+    }
+
+    function updateDownloadState(){
+      const ok = fileTitleInput.value.trim().length > 0;
+      downloadBtn.disabled = !ok;
+      filenameBox.classList.toggle('invalid', !ok);
+    }
+    function requireTitle(){
+      const ok = fileTitleInput.value.trim().length > 0;
+      filenameBox.classList.toggle('invalid', !ok);
+      if(!ok) fileTitleInput.focus();
+      return ok;
+    }
+
+    // --- GESTIÓN DEL TEMA ---
+    function isNightNow(){ const h = new Date().getHours(); return (h >= 19 || h < 7); }
+    function applyTheme(theme){
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem(THEME_KEY, theme);
+      const iconEl = themeToggle.querySelector('.iconify');
+      iconEl.setAttribute('data-icon', theme === 'dark' ? 'ph:sun-bold' : 'ph:moon-stars-bold');
+      window.Iconify?.scan?.(themeToggle);
+    }
+    (function initTheme(){
+      const saved = localStorage.getItem(THEME_KEY);
+      applyTheme(saved ? saved : (isNightNow() ? 'dark' : 'light'));
+      themeToggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+      });
+    })();
+
+    // --- EVENTOS DE LA INTERFAZ ---
+
+    // Campos del formulario
+    fileTitleInput.addEventListener('input', (e) => {
+      applyTitleCaseToInput(e.target);
+      updateDownloadState(); render(); scheduleAutosave();
+    });
+    fileTitleInput.addEventListener('blur', (e) => {
+      e.target.value = esTitleCase(e.target.value);
+      updateDownloadState(); render(); scheduleAutosave();
+    });
+
+    [dateEl, ctxEl, summaryEl, preludeEl].forEach(el => {
+      el.addEventListener('input', ()=>{ render(); scheduleAutosave(); });
+    });
+    dateEl.addEventListener('input', updateDatePrefix);
+    
+    summaryEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            const indent = '    ';
+            if (e.shiftKey) {
+                let lineStart = this.value.lastIndexOf('\n', start - 1) + 1;
+                if (this.value.substring(lineStart, lineStart + indent.length) === indent) {
+                    this.value = this.value.substring(0, lineStart) + this.value.substring(lineStart + indent.length);
+                    this.selectionStart = Math.max(lineStart, start - indent.length);
+                    this.selectionEnd = Math.max(lineStart, end - indent.length);
+                }
+            } else {
+                this.value = this.value.substring(0, start) + indent + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + indent.length;
+            }
+            this.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+
+    // Campo de Paciente (Name)
+    nameEl.addEventListener('input', () => {
+      render(); scheduleAutosave();
+      renderPatientList(nameEl.value, false);
+    });
+    nameEl.addEventListener('blur', () => {
+      addPatientIfNew(nameEl.value);
+      setTimeout(hidePatientDropdown, 150);
+    });
+    patientToggle.addEventListener('click', () => {
+      if(patientList.classList.contains('show')) hidePatientDropdown();
+      else renderPatientList('', true);
+    });
+    document.addEventListener('click', (e) => {
+      if(!patientCombo.contains(e.target)) hidePatientDropdown();
+    });
+    patientCombo.addEventListener('keydown', (e) => {
+      if(!patientList.classList.contains('show')) return;
+      const items = Array.from(patientList.querySelectorAll('.combo-item'));
+      if(items.length===0) return;
+      const idx = items.findIndex(i => i === document.activeElement);
+      if(e.key==='ArrowDown'){ e.preventDefault(); (items[idx+1] || items[0]).focus(); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); (items[idx-1] || items[items.length-1]).focus(); }
+      else if(e.key==='Enter' && document.activeElement.classList.contains('combo-item')){ e.preventDefault(); document.activeElement.click(); }
+      else if(e.key==='Escape'){ hidePatientDropdown(); nameEl.focus(); }
+    });
+
+    // Pestañas (Tabs)
+    $$('.tab').forEach(t => t.addEventListener('click', () => {
+      $$('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      const tab = t.dataset.tab;
+      rendered.style.display = tab==='preview' ? 'block' : 'none';
+      raw.style.display      = tab==='markdown' ? 'block' : 'none';
+    }));
+
+    // Botón Limpiar
+    resetBtn.addEventListener('click', () => {
+      if (confirm('¿Estás seguro de que quieres limpiar todo el formulario? Se borrará la información actual.')) {
+        clearForm();
+        updateDownloadState();
+        hidePatientDropdown();
+        render();
+        autosaveNow();
+      }
+    });
+
+    // Botón Descargar
+    downloadBtn.addEventListener('click', () => {
+      if(!requireTitle()) return;
+      addPatientIfNew(nameEl.value);
+      render();
+      const { md, title } = buildMarkdown();
+      const datePrefix = (dateEl.value || toLocalDateInputValue());
+      const safeTitle = sanitizeFilename(title || 'Sesion');
+      const fname = `${datePrefix} ${safeTitle}.txt`;
+
+      const blob = new Blob([md], { type:'text/plain;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = fname; document.body.appendChild(a);
+      a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    // Guardado al salir/cambiar de pestaña
+    document.addEventListener('visibilitychange', () => { if(document.hidden) autosaveNow(); });
+    window.addEventListener('beforeunload', autosaveNow);
+
+    // --- INICIALIZACIÓN ---
+    (function init(){
+      localStorage.setItem(PATIENTS_KEY, JSON.stringify(getPatients()));
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if(saved){
+        try{ setFormData(JSON.parse(saved)); }
+        catch{ setDefaultDate(); }
+      }else{
+        setDefaultDate();
+      }
+      updateDownloadState();
+      render();
+      hidePatientDropdown();
+    })();
+  </script>
+</body>
+</html>
