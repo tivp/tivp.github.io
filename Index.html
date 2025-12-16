@@ -1,0 +1,88 @@
+Sub EliminarColumnasFinancieras()
+
+    '=================================================
+    ' 1. CONFIGURACIÃ“N
+    '=================================================
+    
+    ' Define aquÃ­ los nombres exactos de las columnas a eliminar.
+    Dim NombresAEliminar As Variant
+    NombresAEliminar = Array("ORO", "BITCOIN", "MONEDAS")
+    
+    ' Define la fila donde se encuentran los encabezados (ej. Fila 1)
+    Const FILA_ENCABEZADOS As Long = 1 
+    
+    '=================================================
+    ' 2. DECLARACIÃ“N DE VARIABLES
+    '=================================================
+    
+    Dim Hoja As Worksheet
+    Dim RangoBuscado As Range
+    Dim i As Long
+    Dim ColumnasEliminadas As Integer ' Contador para el resumen
+    
+    ' Establece la hoja de trabajo activa
+    Set Hoja = ActiveSheet
+    ColumnasEliminadas = 0
+    
+    '=================================================
+    ' 3. MANEJO DE ERRORES Y VELOCIDAD
+    '=================================================
+    
+    ' Detiene la ejecuciÃ³n si hay un error y salta al final (limpieza)
+    On Error GoTo ErrorHandler
+    
+    ' Desactiva la actualizaciÃ³n de pantalla y las alertas para una ejecuciÃ³n mÃ¡s rÃ¡pida
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False 
+    
+    '=================================================
+    ' 4. PROCESO DE ELIMINACIÃ“N
+    '=================================================
+    
+    ' Importante: Recorrer el Array a la inversa (desde el Ãºltimo hasta el primero)
+    ' para evitar problemas de desplazamiento cuando se elimina una columna.
+    
+    For i = UBound(NombresAEliminar) To LBound(NombresAEliminar) Step -1
+        
+        ' 1. BÃºsqueda de la columna
+        Set RangoBuscado = Hoja.Rows(FILA_ENCABEZADOS).Find( _
+            What:=NombresAEliminar(i), _
+            LookIn:=xlValues, _
+            LookAt:=xlWhole, _
+            SearchOrder:=xlByRows, _
+            SearchDirection:=xlNext, _
+            MatchCase:=True) 
+        
+        ' 2. EliminaciÃ³n
+        If Not RangoBuscado Is Nothing Then
+            ' Elimina la columna completa
+            RangoBuscado.EntireColumn.Delete
+            ColumnasEliminadas = ColumnasEliminadas + 1
+        End If
+        
+    Next i
+    
+    '=================================================
+    ' 5. FINALIZACIÃ“N Y RESUMEN
+    '=================================================
+    
+    ' Vuelve a activar las configuraciones originales
+    Limpieza:
+        Application.ScreenUpdating = True
+        Application.DisplayAlerts = True
+    
+    ' Mensaje de finalizaciÃ³n
+    If ColumnasEliminadas > 0 Then
+        MsgBox "Proceso terminado. Se eliminaron " & ColumnasEliminadas & " columna(s) de la hoja '" & Hoja.Name & "'.", vbInformation
+    Else
+        MsgBox "Proceso terminado. No se encontraron las columnas especificadas (" & Join(NombresAEliminar, ", ") & ").", vbExclamation
+    End If
+    
+    Exit Sub ' Sale de la subrutina para evitar ejecutar el manejador de errores
+    
+ErrorHandler:
+    ' Mensaje de error si algo fallÃ³
+    MsgBox "OcurriÃ³ un error (" & Err.Number & "): " & Err.Description, vbCritical
+    GoTo Limpieza ' Asegura que las configuraciones se restablezcan incluso si hay un error
+
+End Sub
