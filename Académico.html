@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Académico</title>
+    <style>
+        /* --- FUENTE PRODUCT SANS --- */
+        @font-face {
+            font-family: 'Product Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Open Sans'), local('Arial'), url(https://fonts.gstatic.com/s/product_sans/v5/HYvgU2fE2nRJvZ5JFAumwegdm0LZdjqr5-oayXSOefg.woff2) format('woff2');
+        }
+
+        /* --- VARIABLES DE COLOR (LIGHT/DARK) --- */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #202124;
+            --panel-bg: #f8f9fa;
+            --box-bg: #ffffff;
+            --box-shadow: rgba(60,64,67,0.1);
+            --border-color: #dadce0;
+            --hover-bg: #e8f0fe;
+            --input-bg: #ffffff;
+            --cat-header-bg: #f1f3f4;
+            --cat-header-text: #5f6368;
+            --switch-off: #ccc;
+            --switch-on: #1a73e8;
+            --modal-overlay: rgba(32,33,36,0.6);
+            --separator-color: #dfe1e5;
+            --toast-bg: #d93025;
+            --toast-text: #fff;
+            --btn-primary: #1a73e8;
+            --btn-primary-hover: #1557b0;
+            --btn-primary-active: #174ea6; 
+            --btn-text: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #202124;
+            --text-color: #e8eaed;
+            --panel-bg: #303134;
+            --box-bg: #303134;
+            --box-shadow: rgba(0,0,0,0.3);
+            --border-color: #5f6368;
+            --hover-bg: #3c4043;
+            --input-bg: #303134;
+            --cat-header-bg: #3c4043;
+            --cat-header-text: #e8eaed;
+            --switch-off: #5f6368;
+            --switch-on: #8ab4f8;
+            --modal-overlay: rgba(0,0,0,0.8);
+            --separator-color: #5f6368;
+            --toast-bg: #e57373;
+            --toast-text: #202124;
+            --btn-primary: #8ab4f8;
+            --btn-primary-hover: #aecbfa;
+            --btn-primary-active: #d2e3fc; 
+            --btn-text: #202124;
+        }
+
+        /* --- BASE --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        a { text-decoration: none; color: inherit; cursor: pointer; }
+        
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 15px 20px;
+            height: 60px;
+        }
+        .header-links-group { display: flex; align-items: center; }
+        .header-link { font-size: 13px; opacity: 0.8; }
+        .header-link:hover { opacity: 1; text-decoration: underline; }
+
+        /* SEPARADOR VERTICAL */
+        .header-separator {
+            width: 1px;
+            height: 24px;
+            background-color: var(--separator-color);
+            margin: 0 15px;
+        }
+        
+        /* BOTÓN DE AJUSTES */
+        .settings-btn {
+            width: 32px; height: 32px;
+            background-image: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
+            border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .settings-btn:hover { transform: rotate(45deg); }
+        .settings-btn svg { fill: white; width: 20px; height: 20px; }
+
+        /* --- SIDEBAR CONFIG --- */
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.1); z-index: 998;
+            opacity: 0; visibility: hidden; transition: 0.3s;
+        }
+        .sidebar-overlay.open { opacity: 1; visibility: visible; }
+
+        .settings-panel {
+            position: fixed; top: 0; right: -300px; width: 300px; height: 100%;
+            background-color: var(--box-bg);
+            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+            z-index: 999;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            display: flex; flex-direction: column;
+        }
+        .settings-panel.open { right: 0; }
+        
+        .panel-header { font-family: 'Product Sans', sans-serif; font-size: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 14px; }
+
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-off); transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--switch-on); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* --- MODAL ESTÉTICO --- */
+        .modal-mate-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--modal-overlay);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        .modal-mate-overlay.visible { opacity: 1; visibility: visible; }
+
+        .modal-content {
+            background-color: var(--box-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.2s;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+        }
+        .modal-mate-overlay.visible .modal-content { transform: scale(1); }
+
+        .modal-close {
+            position: absolute; top: 10px; right: 15px;
+            font-size: 24px; cursor: pointer; color: var(--text-color); opacity: 0.5;
+        }
+        .modal-close:hover { opacity: 1; }
+
+        .modal-title { font-family: 'Product Sans', sans-serif; font-size: 18px; margin-bottom: 15px; color: var(--text-color); }
+        .modal-text { font-size: 14px; line-height: 1.6; margin-bottom: 20px; color: var(--text-color); }
+        
+        /* --- ESTILOS ENLACE AUTOR --- */
+        .author-link:link { color: #1a0dab; text-decoration: none; font-weight: bold; transition: color 0.15s; }
+        .author-link:link:hover { color: #1152a8; text-decoration: none; } 
+        .author-link:link:active { color: #0b327b; text-decoration: none; } 
+        
+        .author-link:visited { color: #f57c00; text-decoration: none; font-weight: bold; transition: color 0.15s; }
+        .author-link:visited:hover { color: #e65100; text-decoration: none; } 
+        .author-link:visited:active { color: #bf360c; text-decoration: none; } 
+
+        [data-theme="dark"] .author-link:link { color: #8ab4f8; }
+        [data-theme="dark"] .author-link:link:hover { color: #aecbfa; } 
+        [data-theme="dark"] .author-link:link:active { color: #d2e3fc; } 
+        
+        [data-theme="dark"] .author-link:visited { color: #ffb74d; }
+        [data-theme="dark"] .author-link:visited:hover { color: #ffcc80; } 
+        [data-theme="dark"] .author-link:visited:active { color: #ffe0b2; } 
+
+        .contact-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+        .contact-label { font-size: 12px; color: #70757a; margin-bottom: 10px; }
+        
+        /* Enlaces sociales centrados */
+        .social-link {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px;
+            margin: 8px 0; color: var(--text-color); font-size: 14px;
+            padding: 8px 15px;
+            border-radius: 6px; transition: background 0.2s;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+        .social-link:hover { background-color: var(--hover-bg); border-color: var(--border-color); }
+        .social-icon { width: 18px; height: 18px; fill: currentColor; }
+
+        /* Botón de descarga de HTML */
+        .modal-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 20px 0;
+        }
+        
+        .download-btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 10px;
+            background-color: var(--btn-primary); color: var(--btn-text);
+            border: none; border-radius: 6px; font-size: 14px; font-weight: bold;
+            font-family: arial, sans-serif; 
+            cursor: pointer;
+            transition: background 0.15s;
+            -webkit-font-smoothing: antialiased;
+        }
+        .download-btn:hover { background-color: var(--btn-primary-hover); }
+        .download-btn:active { background-color: var(--btn-primary-active); }
+        
+        .download-icon { 
+            width: 18px; height: 18px; fill: currentColor; 
+            shape-rendering: crispEdges;
+        }
+
+        /* --- NOTIFICACIÓN (TOAST) --- */
+        .toast-notification {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background-color: var(--toast-bg); color: var(--toast-text);
+            padding: 12px 24px; border-radius: 4px; font-size: 14px; font-weight: bold;
+            opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 3000; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .toast-notification.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+        /* --- MAIN --- */
+        main { display: flex; flex-direction: column; align-items: center; padding-top: 80px; flex-grow: 1; width: 100%; }
+
+        /* --- LOGO --- */
+        .logo-container { position: relative; text-align: center; margin-bottom: 20px; }
+        .logo-text { font-family: 'Product Sans', sans-serif; font-size: 80px; letter-spacing: -2px; font-weight: 400; line-height: 1.2; cursor: pointer; user-select: none; }
+        .c1 { color: #4285f4; } .c2 { color: #ea4335; } .c3 { color: #fbbc05; } .c4 { color: #4285f4; } .c5 { color: #34a853; } .c6 { color: #ea4335; } .c7 { color: #4285f4; } .c8 { color: #fbbc05; } .c9 { color: #ea4335; }
+        .images-mode-badge { position: absolute; bottom: -10px; right: 5px; color: #4285f4; font-family: 'Product Sans', sans-serif; font-size: 16px; display: none; }
+
+        /* --- SEARCH BAR --- */
+        .search-wrapper { width: 100%; padding: 0 20px; display: flex; flex-direction: column; align-items: center; }
+        .search-container { width: 100%; max-width: 584px; position: relative; }
+        .search-bar { width: 100%; height: 46px; border: 1px solid var(--border-color); border-radius: 24px; display: flex; align-items: center; padding: 0 14px; margin: 0 auto; transition: all 0.2s; background: var(--input-bg); }
+        .search-bar:hover, .search-bar.focus { background-color: var(--input-bg); box-shadow: 0 1px 6px var(--box-shadow); border-color: transparent; }
+        .search-input { flex-grow: 1; border: none; outline: none; font-size: 16px; height: 100%; background: transparent; color: var(--text-color); font-family: arial, sans-serif; }
+        .search-icon { margin-right: 12px; fill: #9aa0a6; width: 20px; height: 20px; }
+
+        /* --- BOTONES --- */
+        .buttons-container { margin-top: 28px; display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;}
+        .btn { background-color: var(--panel-bg); border: 1px solid transparent; border-radius: 4px; color: var(--text-color); font-size: 14px; padding: 0 16px; height: 36px; cursor: pointer; user-select: none; }
+        .btn:hover { box-shadow: 0 1px 1px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+        .hidden { display: none !important; }
+
+        /* --- GRID --- */
+        #directory-container { width: 100%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 15px; padding: 20px; margin-bottom: 40px; }
+        .category-box { background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.2s; }
+        .category-box:hover { box-shadow: 0 4px 8px var(--box-shadow); }
+        .cat-header { padding: 10px 12px; font-weight: bold; font-size: 12px; color: var(--cat-header-text); text-transform: uppercase; letter-spacing: 0.5px; background-color: var(--cat-header-bg); border-bottom: 1px solid var(--border-color); }
+        .cat-list { padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+        .site-row { display: flex; align-items: center; padding: 6px 8px; border-radius: 4px; cursor: pointer; transition: background 0.1s; }
+        .site-row:hover { background-color: var(--hover-bg); }
+        .site-row.disabled { opacity: 0.5; pointer-events: none; background-color: transparent; }
+        .site-checkbox { margin-right: 10px; cursor: pointer; accent-color: #1a73e8; }
+        .site-icon { width: 16px; height: 16px; margin-right: 8px; border-radius: 2px; }
+        .site-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; color: var(--text-color); }
+        
+        /* FOOTER */
+        footer { background: var(--cat-header-bg); color: #70757a; font-size: 14px; margin-top: auto; border-top: 1px solid var(--border-color); padding: 15px 30px; display: flex; justify-content: flex-start; }
+        .about-link { cursor: pointer; color: #70757a; transition: color 0.2s; }
+        .about-link:hover { color: var(--text-color); text-decoration: underline; }
+
+    </style>
+</head>
+<body>
+
+    <!-- OVERLAY SIDEBAR -->
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSettings()"></div>
+    
+    <!-- NOTIFICACIÓN (TOAST DE BLOQUEO CON SVG) -->
+    <div class="toast-notification" id="toast">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"></path>
+        </svg>
+        Debes seleccionar una fuente del catálogo para buscar.
+    </div>
+    
+    <!-- PANEL DE CONFIGURACIÓN -->
+    <div class="settings-panel" id="settings-panel">
+        <div class="panel-header">Configuración</div>
+        
+        <div class="setting-item">
+            <span>Modo Oscuro</span>
+            <label class="switch">
+                <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <span>Seleccionar todo al inicio</span>
+            <label class="switch">
+                <input type="checkbox" id="auto-select-toggle" onchange="toggleAutoSelect()">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- MODAL SOBRE ACADÉMICO -->
+    <div class="modal-mate-overlay" id="about-modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeAbout()">&times;</span>
+            
+            <p class="modal-text">
+                Académico fue creado y refinado por <a href="https://tivp.github.io" target="_blank" class="author-link">@tivp</a>
+            </p>
+
+            <div class="contact-section">
+                <div class="contact-label">Puedes encontrarme en:</div>
+                
+                <a href="https://github.com/tivp" target="_blank" class="social-link">
+                    <svg class="social-icon" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    github.com/tivp
+                </a>
+
+                <a href="https://t.me/tivp69" target="_blank" class="social-link">
+                    <svg class="social-icon" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                    t.me/tivp69
+                </a>
+            </div>
+
+            <!-- Botón para descargar la herramienta HTML -->
+            <div class="modal-divider"></div>
+            <button class="download-btn" onclick="downloadHTML()">
+                <svg class="download-icon" viewBox="0 0 24 24">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                Descargar el sitio HTML
+            </button>
+        </div>
+    </div>
+
+    <!-- CABECERA -->
+    <header>
+        <div class="header-links-group" id="header-links">
+            <a class="header-link" id="nav-images" onclick="toggleImagesMode()">Imágenes</a>
+        </div>
+        
+        <!-- SEPARADOR -->
+        <div class="header-separator" id="header-separator"></div>
+
+        <div class="settings-btn" onclick="toggleSettings()" title="Configuración">
+            <svg viewBox="0 0 24 24">
+                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+            </svg>
+        </div>
+    </header>
+
+    <!-- CONTENIDO -->
+    <main>
+        <div class="logo-container" onclick="resetMode()">
+            <div class="logo-text">
+                <span class="c1">A</span><span class="c2">c</span><span class="c3">a</span><span class="c4">d</span><span class="c5">é</span><span class="c6">m</span><span class="c7">i</span><span class="c8">c</span><span class="c9">o</span>
+            </div>
+            <div class="images-mode-badge" id="img-label">Imágenes</div>
+        </div>
+
+        <div class="search-wrapper">
+            <div class="search-container">
+                <div class="search-bar" id="search-bar">
+                    <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+                    <input type="text" class="search-input" id="search-input" title="Buscar">
+                </div>
+            </div>
+
+            <div class="buttons-container">
+                <button class="btn" id="btn-search" onclick="smartSearch()">Buscar con Google</button>
+                <button class="btn" id="btn-lucky" onclick="performLucky()">Voy a tener suerte</button>
+                <button class="btn" onclick="toggleSelectAll()" id="btn-all">Seleccionar Todo</button>
+                <button class="btn hidden" onclick="clearSelection()" id="btn-clear">Limpiar Todo</button>
+            </div>
+        </div>
+
+        <div id="directory-container"></div>
+    </main>
+
+    <footer>
+        <a class="about-link" onclick="openAbout()">Sobre Académico</a>
+    </footer>
+
+    <script>
+        // CONFIGURACIÓN DE BASE DE DATOS
+        const db = {
+          "categories": [
+            {
+              "id": "general", "name": "General / Multidisciplinario",
+              "sources": [
+                { "name": "Google Scholar", "url": "https://scholar.google.com" },
+                { "name": "SciELO", "url": "https://scielo.org" },
+                { "name": "Redalyc", "url": "https://www.redalyc.org" },
+                { "name": "JSTOR", "url": "https://www.jstor.org" },
+                { "name": "Dialnet", "url": "https://dialnet.unirioja.es" },
+                { "name": "UNESCO", "url": "https://www.unesco.org" }
+              ]
+            },
+            {
+              "id": "health", "name": "Salud y Biomedicina",
+              "sources": [
+                { "name": "PubMed", "url": "https://pubmed.ncbi.nlm.nih.gov" },
+                { "name": "ScienceDirect", "url": "https://www.sciencedirect.com" },
+                { "name": "MedlinePlus", "url": "https://medlineplus.gov" },
+                { "name": "Mayo Clinic", "url": "https://www.mayoclinic.org" }
+              ]
+            },
+            {
+              "id": "regional", "name": "Chile y Latinoamérica",
+              "sources": [
+                { "name": "Memoria Chilena", "url": "https://www.memoriachilena.gob.cl" },
+                { "name": "Biblioteca Nacional", "url": "https://www.bn.gov.cl" },
+                { "name": "CChC", "url": "https://cchc.cl" },
+                { "name": "CLACSO", "url": "https://www.clacso.org" }
+              ]
+            },
+            {
+              "id": "social", "name": "Economía y Sociedad",
+              "sources": [
+                { "name": "OECD", "url": "https://www.oecd.org" },
+                { "name": "World Bank", "url": "https://data.worldbank.org" },
+                { "name": "CEPAL", "url": "https://www.cepal.org" }
+              ]
+            }
+          ]
+        };
+
+        let isImagesMode = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGrid();
+            loadSettings();
+        });
+
+        // RENDER GRID
+        function renderGrid() {
+            const container = document.getElementById('directory-container');
+            container.innerHTML = ''; 
+
+            db.categories.forEach(cat => {
+                const box = document.createElement('div');
+                box.className = 'category-box';
+
+                const header = document.createElement('div');
+                header.className = 'cat-header';
+                header.textContent = cat.name;
+                
+                const list = document.createElement('div');
+                list.className = 'cat-list';
+
+                cat.sources.forEach(src => {
+                    const row = document.createElement('div');
+                    row.className = 'site-row';
+                    
+                    let domain = '';
+                    try {
+                        const u = new URL(src.url);
+                        domain = u.hostname.replace('www.', '');
+                    } catch(e){ domain = src.url; }
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'site-checkbox';
+                    checkbox.value = domain;
+                    
+                    if(src.url.includes('scholar.google')) {
+                        checkbox.dataset.isScholar = "true";
+                    }
+
+                    const img = document.createElement('img');
+                    img.className = 'site-icon';
+                    img.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+
+                    const name = document.createElement('span');
+                    name.className = 'site-name';
+                    name.textContent = src.name;
+
+                    row.addEventListener('click', (e) => {
+                        if (row.classList.contains('disabled')) return;
+                        if (e.target !== checkbox) {
+                            checkbox.checked = !checkbox.checked;
+                            updateUI();
+                        }
+                    });
+                    checkbox.addEventListener('change', updateUI);
+
+                    row.appendChild(checkbox);
+                    row.appendChild(img);
+                    row.appendChild(name);
+                    list.appendChild(row);
+                });
+
+                box.appendChild(header);
+                box.appendChild(list);
+                container.appendChild(box);
+            });
+        }
+
+        // SETTINGS & MODALS
+        function toggleSettings() {
+            document.getElementById('settings-panel').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('open');
+        }
+
+        function openAbout() {
+            document.getElementById('about-modal').classList.add('visible');
+        }
+
+        function closeAbout() {
+            document.getElementById('about-modal').classList.remove('visible');
+        }
+
+        document.getElementById('about-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAbout();
+            }
+        });
+
+        function loadSettings() {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            document.getElementById('dark-mode-toggle').checked = isDark;
+            if(isDark) document.body.setAttribute('data-theme', 'dark');
+
+            const isAutoSelect = localStorage.getItem('autoSelect') === 'true';
+            document.getElementById('auto-select-toggle').checked = isAutoSelect;
+            if(isAutoSelect) selectAll(true);
+        }
+
+        function toggleDarkMode() {
+            const isChecked = document.getElementById('dark-mode-toggle').checked;
+            if(isChecked) document.body.setAttribute('data-theme', 'dark');
+            else document.body.removeAttribute('data-theme');
+            localStorage.setItem('darkMode', isChecked);
+        }
+
+        function toggleAutoSelect() {
+            const isChecked = document.getElementById('auto-select-toggle').checked;
+            localStorage.setItem('autoSelect', isChecked);
+            if(isChecked) selectAll(true);
+        }
+
+        // --- FUNCIÓN DE DESCARGA HTML ---
+        function downloadHTML() {
+            const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: "text/html" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "academico.html"; 
+            document.body.appendChild(a);
+            a.click(); 
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }
+
+        // LÓGICA DE BÚSQUEDA
+        const input = document.getElementById('search-input');
+        const btnSearch = document.getElementById('btn-search');
+        const btnClear = document.getElementById('btn-clear');
+        const btnAll = document.getElementById('btn-all');
+        const imgLabel = document.getElementById('img-label');
+        const headerLinks = document.getElementById('header-links');
+        const headerSeparator = document.getElementById('header-separator');
+        const searchBar = document.getElementById('search-bar');
+        const toast = document.getElementById('toast');
+
+        input.addEventListener('focus', () => searchBar.classList.add('focus'));
+        input.addEventListener('blur', () => searchBar.classList.remove('focus'));
+
+        function toggleImagesMode() {
+            isImagesMode = true;
+            headerLinks.style.display = 'none';
+            if(headerSeparator) headerSeparator.style.display = 'none';
+            imgLabel.style.display = 'block';
+
+            const scholarCheckboxes = document.querySelectorAll('.site-checkbox[data-is-scholar="true"]');
+            scholarCheckboxes.forEach(cb => {
+                // Guardar el estado real antes de deshabilitarlo
+                cb.dataset.wasChecked = cb.checked ? "true" : "false";
+                cb.checked = false;
+                cb.disabled = true;
+                cb.closest('.site-row').classList.add('disabled');
+            });
+
+            updateUI();
+        }
+
+        function resetMode() {
+            isImagesMode = false;
+            headerLinks.style.display = 'flex';
+            if(headerSeparator) headerSeparator.style.display = 'block';
+            imgLabel.style.display = 'none';
+
+            const scholarCheckboxes = document.querySelectorAll('.site-checkbox[data-is-scholar="true"]');
+            scholarCheckboxes.forEach(cb => {
+                cb.disabled = false;
+                cb.closest('.site-row').classList.remove('disabled');
+                // Restaurar el estado que tenía
+                if (cb.dataset.wasChecked === "true") {
+                    cb.checked = true;
+                }
+            });
+
+            updateUI();
+        }
+
+        function showToast() {
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function updateUI() {
+            const allCheckboxes = document.querySelectorAll('.site-checkbox:not(:disabled)');
+            const checked = document.querySelectorAll('.site-checkbox:checked:not(:disabled)');
+            
+            if (checked.length > 0) {
+                btnSearch.textContent = isImagesMode 
+                    ? `Buscar Imágenes (${checked.length})` 
+                    : `Buscar en Selección (${checked.length})`;
+            } else {
+                btnSearch.textContent = isImagesMode ? "Buscar Imágenes" : "Buscar con Google";
+            }
+
+            if (checked.length === 0) {
+                btnAll.classList.remove('hidden');
+                btnClear.classList.add('hidden');
+            } else if (checked.length === allCheckboxes.length && allCheckboxes.length > 0) {
+                btnAll.classList.add('hidden');
+                btnClear.classList.remove('hidden');
+            } else {
+                btnAll.classList.remove('hidden');
+                btnClear.classList.remove('hidden');
+            }
+        }
+
+        function selectAll(force = false) {
+            const checkboxes = document.querySelectorAll('.site-checkbox:not(:disabled)');
+            checkboxes.forEach(c => c.checked = true);
+            updateUI();
+        }
+
+        function toggleSelectAll() { selectAll(); }
+        function clearSelection() {
+            document.querySelectorAll('.site-checkbox').forEach(c => c.checked = false);
+            updateUI();
+        }
+
+        function smartSearch() {
+            const query = input.value.trim();
+            const checked = document.querySelectorAll('.site-checkbox:checked');
+            
+            if (!query) return;
+
+            if (checked.length === 0) {
+                showToast();
+                return;
+            }
+
+            let scholarSelected = false;
+            let standardDomains = [];
+
+            checked.forEach(c => {
+                if (c.dataset.isScholar === "true" && !isImagesMode) {
+                    scholarSelected = true;
+                } else {
+                    standardDomains.push(`site:${c.value}`);
+                }
+            });
+
+            if (scholarSelected) {
+                window.open(`https://scholar.google.com/scholar?hl=es&q=${encodeURIComponent(query)}`, '_blank');
+            }
+
+            if (scholarSelected && standardDomains.length === 0) return;
+
+            let siteQuery = "";
+            if (standardDomains.length > 0) siteQuery = ` (${standardDomains.join(' OR ')})`;
+
+            const finalQuery = encodeURIComponent(query + siteQuery);
+            let mainUrl = isImagesMode 
+                ? `https://www.google.com/search?tbm=isch&q=${finalQuery}`
+                : `https://www.google.com/search?q=${finalQuery}`;
+
+            window.location.href = mainUrl;
+        }
+        
+        function performLucky() { window.location.href = "https://www.google.com/doodles"; }
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') smartSearch();
+        });
+
+    </script>
+</body>
+</html>
