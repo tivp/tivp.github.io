@@ -893,7 +893,7 @@ REGLAS DE EXTRACCIÓN (Los campos son OPCIONALES, incluye solo lo que cambie, ex
 - "weight": (decimal) Peso en kg. Estímalo obligatoriamente si es un producto físico nuevo. SÉ PRECISO Y MATEMÁTICO: si el usuario menciona cantidades y volúmenes (ej. "sixpack de 360ml"), CALCULA el peso real (6 * 0.36 = 2.16 kg). No adivines cifras irreales.
 - "margin": (entero) Porcentaje de ganancia.
 - "physical": (booleano) ¡CRÍTICO! Si el usuario dice "sin blue", "sin envío" o "retiro", DEBES INCLUIR "physical": false. Si pide "con blue", DEBES INCLUIR "physical": true.
-- "channel": "ml" (Mercado Libre) o "own" (Por mi cuenta).
+- "channel": "ml" (Mercado Libre) o "own" (Por mi cuenta). ¡REGLA DE ORO!: Si el usuario pide pagar con Mercado Pago, SumUp, Webpay, Flow, Khipu o Efectivo/Transferencia, DEBES poner "channel": "own" obligatoriamente.
 - "pct": (entero) 11 (Clásica) o 16 (Premium).
 - "payFee": (numérico) ¡OBLIGATORIO usar estos valores exactos si los nombran!: Efectivo/Transferencia=0, Khipu=1.19, Webpay Débito=1.9, Webpay Crédito=2.38, Mercado Pago=2.69, Flow=3.44, SumUp=3.58. Si piden un medio distinto a estos, asume su comisión o usa 0.
 - "msg": (cadena) OBLIGATORIO. Tu respuesta charlando.
@@ -1012,8 +1012,20 @@ function applyAIConfig(config) {
   if (config.weight !== undefined) setWeight(config.weight);
   if (config.margin !== undefined) setMarkup(config.margin);
   
+  // Forzar canal a 'own' si la IA manda un medio de pago, por seguridad
+  if (config.payFee !== undefined) {
+    if (S.channel !== 'own') {
+      S.channel = 'own';
+      document.querySelectorAll('.chtab').forEach(x => x.classList.remove('on'));
+      const oTab = document.querySelector('.chtab[data-ch="own"]');
+      if (oTab) oTab.classList.add('on');
+      $('mlConfig').style.display  = 'none';
+      $('ownConfig').style.display = '';
+    }
+  }
+
   // Cambiar canal de venta
-  if (config.channel !== undefined) {
+  if (config.channel !== undefined && config.payFee === undefined) {
     S.channel = config.channel;
     document.querySelectorAll('.chtab').forEach(x => x.classList.remove('on'));
     const tab = document.querySelector(`.chtab[data-ch="${S.channel}"]`);
