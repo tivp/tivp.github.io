@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Inversa de Mercado Libre — Herramienta de Pricing Chile</title>
+<meta name="description" content="Herramienta de pricing estratégico para vendedores de Mercado Libre Chile. Calcula el precio de venta ideal a partir de tu costo, margen deseado y envío Blue Express. Incluye análisis Profit First y panorama de reinversión por cantidad de unidades vendidas."/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800;0,6..12,900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+[data-theme="light"]{
+  --bg:#ebebeb;--bg2:#ffffff;--bg3:#f5f5f5;
+  --border:#e6e6e6;--border2:#c8c8c8;
+  --text:#333333;--text2:#666666;--muted:#999999;
+  --sh:0 1px 2px rgba(0,0,0,.12);
+  --input-bg:#ffffff;
+  --ac:#3483fa;--ac-text:#ffffff;--ac-bg:rgba(52,131,250,.08);--ac-border:#3483fa;
+  --hero-grad:linear-gradient(135deg,#eaf0fe,#f5f8ff);
+  --g:#00a650;--r2:#f23d4f;--o:#f07a00;--b:#3483fa;
+  --be-blue:#0055bb;
+}
+[data-theme="dark"]{
+  --bg:#0d1018;--bg2:#141921;--bg3:#1a2132;
+  --border:#1f2840;--border2:#283250;
+  --text:#ffffff;--text2:#dce6ff;--muted:#a0aece;
+  --sh:0 1px 8px rgba(0,0,0,.45);
+  --input-bg:#1a2132;
+  --ac:#3483fa;--ac-text:#ffffff;--ac-bg:rgba(52,131,250,.12);--ac-border:#3483fa;
+  --hero-grad:linear-gradient(135deg,#0d1830,#0d1018);
+  --g:#00e676;--r2:#ef5350;--o:#ff8f00;--b:#5599ff;
+  --be-blue:#3d8fff;
+}
+:root{--r:6px;}
+
+body{font-family:'Nunito Sans','Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;transition:background .2s,color .2s;}
+
+header{background:#FFE600;height:54px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(0,0,0,.1);}
+.hbrand{display:flex;align-items:center;gap:10px;}
+.hlogo{display:flex;align-items:center;gap:7px;font-size:22px;font-weight:800;color:#111;}
+.hbadge{background:#111;color:#FFE600;font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:.4px;}
+.hright{display:flex;align-items:center;gap:8px;}
+.theme-btn{background:rgba(0,0,0,.12);border:none;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#222;transition:background .15s;}
+.theme-btn:hover{background:rgba(0,0,0,.22);}
+.theme-btn.debug-on {
+  color: var(--r2);
+  background: rgba(242, 61, 79, 0.12);
+  border: 1px solid var(--r2);
+}
+
+main{max-width:1000px;margin:0 auto;padding:24px 20px 80px;display:grid;gap:12px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:640px){.grid2{grid-template-columns:1fr;}.hbrand{gap:6px;}}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;box-shadow:var(--sh);transition:background .2s,border-color .2s;}
+.ct{font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.ct-badge{background:var(--bg3);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;color:var(--b);border:1px solid var(--border2);}
+
+.field{margin-bottom:16px;}
+.field:last-child{margin-bottom:0;}
+.flabel{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+
+.mi{display:flex;align-items:center;background:var(--input-bg);border:1px solid var(--border2);border-radius:4px;overflow:hidden;transition:border-color .15s,box-shadow .15s;}
+.mi:focus-within{border-color:var(--ac);box-shadow:0 0 0 2px rgba(52,131,250,.2);}
+.mi-side{padding:0 12px;background:var(--bg3);height:42px;display:flex;align-items:center;font-size:14px;font-weight:700;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;flex-shrink:0;}
+.mi-side.l{border-right:1px solid var(--border2);}
+.mi-side.r{border-left:1px solid var(--border2);}
+.mi-text{border:none;outline:none;background:transparent;padding:0 12px;font-size:16px;font-weight:700;color:var(--text);width:100%;height:42px;text-align:right;font-family:'DM Mono',monospace;}
+
+.tog-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);}
+.tog-row:last-child{border-bottom:none;}
+.tog-lbl{font-size:14px;font-weight:600;color:var(--text);}
+.tog-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.switch{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.sw{position:absolute;inset:0;cursor:pointer;background:#ccc;border-radius:22px;transition:.2s;}
+.sw::before{content:'';position:absolute;height:16px;width:16px;bottom:3px;left:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+input:checked+.sw{background:var(--ac);}
+input:checked+.sw::before{transform:translateX(18px);}
+.blue-sw input:checked+.sw{background:var(--be-blue) !important;}
+
+.talla-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.tcard{border:1px solid var(--border);border-radius:4px;background:var(--bg3);padding:10px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none;opacity:.4;transition:all .2s;}
+.tcard.active{border-color:var(--ac);background:var(--ac-bg);opacity:1;}
+.tcard .tn{font-size:15px;font-weight:800;color:var(--text2);}
+.tcard .tk{font-size:10px;color:var(--muted);}
+.tcard .tp{font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--muted);margin-top:2px;}
+.tcard.active .tn,.tcard.active .tp{color:var(--ac);}
+
+.chtabs{display:flex;gap:8px;margin-bottom:16px;}
+.chtab{flex:1;padding:10px;border:1px solid var(--border2);border-radius:4px;background:var(--bg3);cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.chtab:hover{border-color:var(--ac);}
+.chtab.on{border-color:var(--ac);background:var(--ac-bg);color:var(--ac);}
+
+.pubtabs{display:flex;gap:8px;}
+.pubtab{flex:1;padding:12px 8px;text-align:center;border:1px solid var(--border2);border-radius:4px;background:var(--bg3);cursor:pointer;transition:all .15s;}
+.pubtab .pt-pct{font-size:18px;font-weight:800;color:var(--text);display:block;margin-bottom:2px;}
+.pubtab .pt-name{font-size:11px;color:var(--muted);display:block;}
+.pubtab:hover{border-color:var(--ac);}
+.pubtab.on{border-color:var(--ac);background:var(--ac-bg);}
+.pubtab.on .pt-pct{color:var(--ac);}
+
+.paybtn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.paybtn{border:1px solid var(--border2);border-radius:4px;background:var(--bg3);cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;transition:all .15s;min-width:0;}
+.paybtn:hover{border-color:var(--ac);}
+.paybtn.on{border-color:var(--ac);background:var(--ac-bg);}
+.pb-left{min-width:0;flex:1;}
+.pb-name{font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pb-sub{font-size:10px;color:var(--muted);display:block;margin-top:1px;}
+.pb-fee{font-size:12px;font-weight:800;font-family:'DM Mono',monospace;color:var(--muted);flex-shrink:0;white-space:nowrap;}
+.paybtn.on .pb-name{color:var(--text);}
+.paybtn.on .pb-fee{color:var(--ac);}
+
+.mgpresets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.mgp{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;text-align:center;line-height:1.3;}
+.mgp .ps{display:block;font-size:9px;font-weight:500;color:var(--muted);margin-top:2px;}
+.mgp.on{border-color:var(--ac);background:var(--ac-bg);color:var(--ac);}
+.mgp.on .ps{color:var(--muted);}
+.mgp:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 2px rgba(52,131,250,.2);}
+.slrow{display:flex;align-items:center;gap:10px;margin-top:8px;}
+input[type=range]{flex:1;height:4px;-webkit-appearance:none;background:var(--border2);border-radius:4px;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ac);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.slbadge{min-width:52px;text-align:center;background:var(--ac);color:var(--ac-text);font-size:12px;font-weight:800;padding:4px 8px;border-radius:4px;font-family:'DM Mono',monospace;}
+
+.pfbook{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);margin-top:16px;overflow:hidden;}
+.pfbook-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text2);}
+.pfrow{display:flex;border-bottom:1px solid var(--border);transition:background .12s;cursor:pointer;}
+.pfrow:last-child{border-bottom:none;}
+.pfrow:hover{background:var(--ac-bg);}
+.pfrow.pf-active{background:var(--ac-bg);}
+.pf-pct{min-width:62px;padding:12px 16px;font-size:14px;font-weight:800;font-family:'DM Mono',monospace;color:var(--muted);border-right:1px solid var(--border);display:flex;align-items:center;}
+.pfrow.pf-active .pf-pct{color:var(--ac);}
+.pf-body{padding:12px 16px;flex:1;}
+.pf-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:2px;}
+.pfrow.pf-active .pf-title{color:var(--text);}
+.pf-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+
+.rhero{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;position:relative;overflow:hidden;box-shadow:var(--sh);transition:background .2s;}
+[data-theme="dark"] .rhero{background:var(--hero-grad);}
+.rhero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(52,131,250,.08),transparent 70%);border-radius:50%;}
+.rhero>*{position:relative;}
+.rl{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+.rv{font-size:42px;font-weight:900;color:var(--ac);font-family:'DM Mono',monospace;letter-spacing:-1px;line-height:1;margin-bottom:6px;}
+.rsub{font-size:13px;color:var(--muted);}
+
+.bk{display:flex;flex-direction:column;}
+.br{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text2);}
+.br:last-child{border-bottom:none;}
+.br .v{font-weight:700;color:var(--text);font-family:'DM Mono',monospace;}
+.br .v.neg{color:var(--r2);}
+.br .v.pos{color:var(--g);}
+.br .v.ac{color:var(--ac);}
+.br.tot{padding-top:12px;font-size:15px;font-weight:700;color:var(--text);border-top:2px solid var(--border2);border-bottom:none;margin-top:4px;}
+
+.gbar{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--border);margin:8px 0 6px;}
+.gfill{height:100%;border-radius:4px;transition:width .4s,background .4s;}
+.gtag{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;}
+.ref-list{display:flex;flex-direction:column;gap:5px;margin-top:10px;}
+.ref-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+.chart-wrap{position:relative;width:100%;height:220px;}
+#profitChart{width:100%;height:100%;display:block;}
+
+.pan-desc{background:rgba(52,131,250,.06);border:1px solid rgba(52,131,250,.2);border-radius:4px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+.ptable{width:100%;border-collapse:collapse;}
+.ptable th{text-align:left;padding:10px 10px;font-size:12px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border2);}
+.ptable td{padding:11px 10px;font-size:13px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-weight:600;}
+.ptable tr:last-child td{border-bottom:none;}
+.ptable td.lbl{font-family:'Nunito Sans',sans-serif;font-size:13px;color:var(--text2);}
+.ptable td.pos{color:var(--g);}
+.ptable td.neg{color:var(--r2);}
+.ptable td.ac{color:var(--ac);}
+.ptable td.reinvest{color:var(--ac);font-size:12px;}
+
+.pill{display:inline-flex;align-items:center;background:rgba(52,131,250,.1);color:var(--ac);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:4px;font-family:'Nunito Sans',sans-serif;}
+.pill.green{background:rgba(0,166,80,.1);color:var(--g);}
+.pill.red{background:rgba(242,61,79,.1);color:var(--r2);}
+.ship-change{display:inline-flex;align-items:center;gap:3px;background:rgba(240,122,0,.1);color:var(--o);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;font-family:'Nunito Sans',sans-serif;margin-left:3px;}
+.ship-same{display:inline-flex;background:rgba(52,131,250,.08);color:var(--ac);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;font-family:'Nunito Sans',sans-serif;margin-left:3px;}
+
+.alert{padding:12px 16px;border-radius:4px;font-size:13px;display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;line-height:1.5;}
+.alert.warn{background:rgba(240,122,0,.08);border:1px solid rgba(240,122,0,.3);color:var(--o);}
+.alert.err{background:rgba(242,61,79,.08);border:1px solid rgba(242,61,79,.3);color:var(--r2);}
+
+footer{font-size:11px;color:var(--muted);text-align:center;line-height:1.8;padding-top:4px;}
+.custom-fee-wrap{margin-top:10px;display:none;}
+.custom-fee-wrap.show{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+.tipw{position:relative;display:inline-flex;align-items:center;cursor:help;flex-shrink:0;}
+.tipw svg{display:block;}
+.tipw::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:500;font-family:'Nunito Sans',sans-serif;line-height:1.4;padding:8px 12px;border-radius:4px;border:1px solid var(--border2);box-shadow:0 4px 12px rgba(0,0,0,.15);white-space:pre-line;width:210px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;text-align:left;}
+.tipw::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;}
+.tipw:hover::after,.tipw:hover::before{opacity:1;}
+
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+.pop{animation:pop .22s ease;}
+svg.ic{display:inline-block;vertical-align:middle;flex-shrink:0;}
+
+@media(max-width:640px){
+  .hlogo span{font-size:13px;}
+  .hbadge{display:none;}
+  main{padding:12px 10px 60px;}
+  .card{padding:16px;}
+  .talla-row{grid-template-columns:repeat(2,1fr);}
+  .paybtn-grid{grid-template-columns:1fr;}
+  .rhero{padding:16px;}
+  .rv{font-size:32px;}
+  .chart-wrap{height:175px;}
+  .ptable th:nth-child(2),.ptable td:nth-child(2){display:none;}
+  .ptable th:nth-child(6),.ptable td:nth-child(6){display:none;}
+  .tipw::after{left:0;transform:none;width:195px;}
+  .tipw::before{left:6px;transform:none;}
+  .rsub{font-size:11px;word-break:break-word;}
+  .pf-pct{min-width:50px;font-size:12px;padding:10px 12px;}
+  .pf-title{font-size:12px;}
+  .pf-desc{font-size:11px;}
+  .chtab{font-size:12px;padding:9px 6px;gap:4px;}
+}
+@media(max-width:380px){
+  .rv{font-size:26px;}
+  .ptable th:nth-child(4),.ptable td:nth-child(4){display:none;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbrand">
+    <div class="hlogo">
+      <span style="font-size:15px;font-weight:800;color:#111;letter-spacing:-0.3px;">Calculadora Inversa de Mercado Libre</span>
+    </div>
+    <div class="hbadge">ML + Blue Express</div>
+  </div>
+  <div class="hright">
+    <button class="theme-btn" id="debugBtn" title="Activar/Desactivar Modo Debug (Ver JSON)">
+      <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-3.9"/><path d="M6.53 15H3"/><path d="M21 15h-3.53"/><path d="M6.53 21c-1.93.2-3.53 1.9-3.53 3.9"/><path d="M17.47 21c1.93.2 3.53 1.9 3.53 3.9"/>
+      </svg>
+    </button>
+    <button class="theme-btn" id="themeBtn" title="Cambiar tema claro / oscuro">
+      <svg id="iconMoon" class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg id="iconSun"  class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+
+<div class="card" style="margin-bottom: 16px; border-color: var(--ac);">
+  <div class="ct">
+    <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Configuración Asistida por IA
+  </div>
+  
+  <div id="chatHistory" style="height: 180px; overflow-y: auto; border: 1px solid var(--border); padding: 12px; margin-bottom: 12px; border-radius: 4px; background: var(--bg3); display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+    <div style="color: var(--muted); text-align: center; margin-top: 20px;">Escribe tus costos y márgenes. La IA configurará la calculadora por ti.</div>
+  </div>
+
+  <div class="mi" style="display: flex; padding-right: 6px;">
+    <input class="mi-text" id="chatInput" type="text" placeholder="Ej: Mi costo es 6000, peso 0.5kg y quiero 150% de ganancia..." style="text-align: left; flex: 1; font-family: 'DM Mono', monospace; font-size: 14px; font-weight: normal;">
+    <button id="chatSendBtn" style="background: var(--ac); color: var(--ac-text); border: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.2s; flex-shrink: 0; align-self: center;" title="Enviar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="grid2">
+
+  <div class="card">
+    <div class="ct">Producto</div>
+    <div class="field">
+      <div class="flabel">Costo del producto
+        <span class="tipw" data-tip="Lo que pagas al proveedor por unidad.&#10;↑↓ en el teclado suma o resta $500.">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        </span>
+      </div>
+      <div class="mi">
+        <div class="mi-side l">$</div>
+        <input class="mi-text" id="costInput" type="text" value="5.500" inputmode="numeric"/>
+      </div>
+    </div>
+
+    <div class="tog-row">
+      <div>
+        <div class="tog-lbl" style="display:flex;align-items:center;gap:7px;">
+          <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0055bb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+          Envío por Blue Express
+        </div>
+        <div class="tog-sub">Puerta a puerta · región · 2 días hábiles</div>
+      </div>
+      <label class="switch blue-sw"><input type="checkbox" id="physTog" checked/><span class="sw"></span></label>
+    </div>
+
+    <div id="weightSection">
+      <div class="field" style="margin-top:14px;">
+        <div class="flabel">Peso por unidad
+          <span class="tipw" data-tip="Peso aproximado de 1 unidad.&#10;La talla Blue Express se calcula solo&#10;según la cantidad del pedido.&#10;↑↓ en el teclado suma o resta 0,1 Kg.">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </span>
+        </div>
+        <div class="mi" style="width:fit-content;">
+          <input class="mi-text" id="weightInput" type="text" value="1" inputmode="decimal" style="width:80px;text-align:right;"/>
+          <div class="mi-side r">Kg</div>
+        </div>
+      </div>
+      <div class="flabel" style="margin-bottom:8px;">
+        Talla Blue Express
+        <span style="font-size:10px;font-weight:600;color:var(--b);margin-left:4px;font-style:italic;">automática según peso</span>
+      </div>
+      <div class="talla-row">
+        <div class="tcard" data-maxkg="0.5"><div class="tn">XS</div><div class="tk">≤ 0,5 Kg</div><div class="tp">$4.300</div></div>
+        <div class="tcard" data-maxkg="3"><div class="tn">S</div><div class="tk">≤ 3 Kg</div><div class="tp">$5.600</div></div>
+        <div class="tcard" data-maxkg="6"><div class="tn">M</div><div class="tk">≤ 6 Kg</div><div class="tp">$7.300</div></div>
+        <div class="tcard" data-maxkg="20"><div class="tn">L</div><div class="tk">≤ 20 Kg</div><div class="tp">$9.200</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Canal de venta</div>
+    <div class="chtabs">
+      <div class="chtab on" data-ch="ml">
+        <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Mercado Libre
+      </div>
+      <div class="chtab" data-ch="own">
+        <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Por mi cuenta
+      </div>
+    </div>
+
+    <div id="mlConfig">
+      <div class="field">
+        <div class="flabel" style="margin-bottom:10px;">Tipo de publicación</div>
+        <div class="pubtabs">
+          <div class="pubtab on" data-pct="11"><span class="pt-pct">11%</span><span class="pt-name">Clásica</span></div>
+          <div class="pubtab" data-pct="16"><span class="pt-pct">16%</span><span class="pt-name">Premium</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="ownConfig" style="display:none;">
+      <div class="field">
+        <div class="flabel" style="margin-bottom:10px;">Medio de pago</div>
+        <div class="paybtn-grid">
+          <div class="paybtn on" data-fee="0">
+            <div class="pb-left"><div class="pb-name">Efectivo / Transferencia</div><span class="pb-sub">Sin comisión</span></div>
+            <div class="pb-fee">0%</div>
+          </div>
+          <div class="paybtn" data-fee="1.19"><div class="pb-left"><div class="pb-name">Khipu</div><span class="pb-sub">1% + IVA</span></div><div class="pb-fee">1,19%</div></div>
+          <div class="paybtn" data-fee="1.9"><div class="pb-left"><div class="pb-name">Webpay Débito</div><span class="pb-sub">Transbank</span></div><div class="pb-fee">~1,9%</div></div>
+          <div class="paybtn" data-fee="2.38"><div class="pb-left"><div class="pb-name">Webpay Crédito</div><span class="pb-sub">Transbank</span></div><div class="pb-fee">~2,38%</div></div>
+          <div class="paybtn" data-fee="2.69"><div class="pb-left"><div class="pb-name">Mercado Pago</div><span class="pb-sub">IVA incluido</span></div><div class="pb-fee">2,69%</div></div>
+          <div class="paybtn" data-fee="3.44"><div class="pb-left"><div class="pb-name">Flow</div><span class="pb-sub">2,89% + IVA</span></div><div class="pb-fee">3,44%</div></div>
+          <div class="paybtn" data-fee="3.58"><div class="pb-left"><div class="pb-name">SumUp</div><span class="pb-sub">Presencial</span></div><div class="pb-fee">~3,58%</div></div>
+          <div class="paybtn" data-fee="custom"><div class="pb-left"><div class="pb-name">Personalizada</div><span class="pb-sub">Ingresa el %</span></div></div>
+        </div>
+        <div class="custom-fee-wrap" id="customFeeWrap">
+          <div class="mi" style="width:fit-content;">
+            <input class="mi-text" id="customFeeInput" type="text" value="0,00" inputmode="decimal" style="width:80px;text-align:right;"/>
+            <div class="mi-side r">%</div>
+          </div>
+          <span style="font-size:11px;color:var(--muted);"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="flabel" style="margin-bottom:10px;">
+        Markup de ganancia
+        <span class="tipw" data-tip="% de ganancia sobre tus costos totales.&#10;Keystone (100%) = precio doble del costo.&#10;La ruedita del mouse sobre la cinta&#10;también sube o baja el valor.">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        </span>
+      </div>
+      <div class="slrow">
+        <input type="range" id="mg" min="0" max="300" step="5" value="100" tabindex="-1"/>
+        <div class="slbadge" id="mgLbl">100%</div>
+      </div>
+    </div>
+
+    <div class="pfbook">
+      <div class="pfbook-head">
+        <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Profit First · Mike Michalowicz
+      </div>
+      <div class="pfrow" id="pf25" data-mg="25"><div class="pf-pct">25%</div><div class="pf-body"><div class="pf-title">Supervivencia — el negocio devora dinero</div><div class="pf-desc">La trampa: "ventas − gastos = lo que sobra". El negocio vive al límite, sin reservas. Cero colchón ante imprevistos o devoluciones.</div></div></div>
+      <div class="pfrow" id="pf50" data-mg="50"><div class="pf-pct">50%</div><div class="pf-body"><div class="pf-title">Estabilidad — cubre costos ocultos</div><div class="pf-desc">Empiezas a separar utilidades primero. Incluso el 1% de ganancia retirada desde el inicio cambia el comportamiento del negocio.</div></div></div>
+      <div class="pfrow" id="pf100" data-mg="100"><div class="pf-pct">100%</div><div class="pf-body"><div class="pf-title">Keystone — flujo de caja positivo</div><div class="pf-desc">Precio = 2× costo. El umbral donde el negocio deja de ser un "monstruo comedinero" y genera cashflow real. Estándar retail histórico.</div></div></div>
+      <div class="pfrow" id="pf150" data-mg="150"><div class="pf-pct">150%</div><div class="pf-body"><div class="pf-title">Empresa rentable — puedes pagarte un sueldo</div><div class="pf-desc">Funciona con las 4 cuentas de Profit First: utilidades, impuestos, sueldo del dueño y operación. Todo separado desde el inicio.</div></div></div>
+      <div class="pfrow" id="pf200" data-mg="200"><div class="pf-pct">200%</div><div class="pf-body"><div class="pf-title">Máquina de dinero — el negocio trabaja para ti</div><div class="pf-desc">"Un negocio pequeño y rentable vale más que uno grande que sobrevive al borde." Genera activos, no solo ingresos.</div></div></div>
+    </div>
+  </div>
+
+</div><div class="rhero">
+  <div class="rl">Precio de venta sugerido — 1 unidad (caso base)</div>
+  <div class="rv" id="heroPrice">—</div>
+  <div class="rsub" id="heroSub">—</div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="ct">Desglose · 1 unidad</div>
+    <div class="bk">
+      <div class="br"><span>Precio de venta</span><span class="v ac" id="bSale">—</span></div>
+      <div class="br"><span id="bComLbl">− Comisión ML (11%)</span><span class="v neg" id="bCom">—</span></div>
+      <div class="br" id="bFixedRow"><span>− Costo fijo ML <span class="pill" id="tramoPill">—</span></span><span class="v neg" id="bFixed">—</span></div>
+      <div class="br" id="bShipRow"><span id="bShipLbl">− Envío Blue (S)</span><span class="v neg" id="bShip">—</span></div>
+      <div class="br"><span>− Costo producto</span><span class="v neg" id="bCostD">—</span></div>
+      <div class="br tot"><span>= Ganancia neta</span><span class="v pos" id="bProfit">—</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Análisis de margen</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;">
+      <div>
+        <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;" id="marginDisp">—</div>
+        <div style="font-size:11px;color:var(--muted);">Margen sobre precio de venta</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;" id="markupDisp">100%</div>
+        <div style="font-size:11px;color:var(--muted);">Markup sobre costos</div>
+      </div>
+    </div>
+    <div class="gbar"><div class="gfill" id="gfill"></div></div>
+    <div><span class="gtag" id="gtag">—</span></div>
+    <div class="ref-list" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Margen sobre precio de venta</div>
+      <div class="ref-row"><div class="dot" style="background:var(--r2)"></div>&lt;20% — Peligroso, sin colchón</div>
+      <div class="ref-row"><div class="dot" style="background:var(--o)"></div>20–35% — Mínimo viable</div>
+      <div class="ref-row"><div class="dot" style="background:var(--ac)"></div>35–50% — Saludable</div>
+      <div class="ref-row"><div class="dot" style="background:var(--g)"></div>&gt;50% — Fuerte / Keystone</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">Ganancia por cantidad de unidades vendidas <div class="ct-badge">gráfico de línea</div></div>
+  <div class="chart-wrap"><canvas id="profitChart"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="ct">Panorama de ventas por unidad <div class="ct-badge">estrategia de precios</div></div>
+  <div class="pan-desc">
+    <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--b)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <span>Publicas <strong style="color:var(--text);">un solo precio</strong> en ML. El comprador paga ese precio por cada unidad que lleva. Tú pagas el envío una sola vez por pedido — y si el peso total sube de talla Blue, ese costo aumenta. Así cambia tu ganancia según cuánto te compren.</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="ptable">
+      <thead><tr>
+        <th>Pedido</th><th>Talla Blue</th><th>Comprador paga</th>
+        <th>Tu envío</th><th>Tu ganancia</th>
+        <th>Reinversión posible</th>
+      </tr></thead>
+      <tbody id="panBody"></tbody>
+    </table>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);">
+    <span class="ship-change" style="margin-left:0;"><svg class="ic" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>Salto de talla</span>
+  </div>
+</div>
+
+<div id="alertZone"></div>
+<footer></footer>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmtCLP=n=>Math.round(n).toLocaleString('es-CL');
+function fmtKg(n){return Number.isInteger(n)?String(n):n.toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:2});}
+function parseCLP(s){return parseInt((s||'').replace(/\./g,'').replace(',','').replace(/[^\d]/g,''),10)||0;}
+function parseKg(s){return parseFloat((s||'').replace(',','.'))||0.1;}
+
+const BLUE=[{lbl:'XS',maxKg:.5,price:4300},{lbl:'S',maxKg:3,price:5600},{lbl:'M',maxKg:6,price:7300},{lbl:'L',maxKg:20,price:9200}];
+let S={cost:5500,physical:true,weightPerUnit:1,channel:'ml',pct:11,payFee:0,margin:100,theme:'dark'};
+
+function getFixed(s){return s<=9990?700:s<=19990?1000:0;}
+function getTramo(s){return s<=9990?'≤$9.990':s<=19990?'$9.990–$19.990':'>$19.990';}
+function getShipIdx(qty){const kg=qty*S.weightPerUnit;for(let i=0;i<BLUE.length;i++)if(kg<=BLUE[i].maxKg)return i;return BLUE.length-1;}
+
+function updateTallaCards(){
+  const idx=getShipIdx(1);
+  document.querySelectorAll('.tcard').forEach((c,i)=>c.classList.toggle('active',i===idx));
+}
+
+function solveML(netDes,pct){
+  const p=pct/100;if(p>=1)return{sale:0,fixed:0};
+  const T=[{fixed:700,lo:0,hi:9990},{fixed:1000,lo:9990,hi:19990},{fixed:0,lo:19990,hi:Infinity}];
+  for(const t of T){const raw=(netDes+t.fixed)/(1-p);if(raw>t.lo&&raw<=t.hi+.5){const sale=Math.ceil(raw);if(sale*(1-p)-getFixed(sale)>=netDes-1)return{sale,fixed:getFixed(sale)};}}
+  let sale=Math.ceil(netDes/(1-p));
+  for(let i=0;i<10;i++){const f=getFixed(sale);const ns=Math.ceil((netDes+f)/(1-p));if(ns===sale)break;sale=ns;}
+  while(sale*(1-p)-getFixed(sale)<netDes)sale++;
+  return{sale,fixed:getFixed(sale)};
+}
+
+function calcForQty(qty,fixedSale){
+  const ti=getShipIdx(qty);const tier=BLUE[ti];
+  const shipOrder=S.physical?tier.price:0; // envío se paga UNA vez por pedido
+  let sale,fixedPerUnit,commissionPerUnit;
+  if(fixedSale!==undefined){
+    sale=fixedSale;
+    if(S.channel==='ml'){
+      fixedPerUnit=getFixed(sale);
+      commissionPerUnit=sale*(S.pct/100);
+    } else {
+      fixedPerUnit=0;
+      commissionPerUnit=sale*(S.payFee/100);
+    }
+  } else {
+    // Para calcular el precio base (1 unidad), el envío se imputa por unidad
+    const shipPerUnitBase=shipOrder/qty;
+    const base=S.cost+shipPerUnitBase;
+    const netDes=base*(1+S.margin/100);
+    if(S.channel==='ml'){
+      const r=solveML(netDes,S.pct);
+      sale=r.sale; fixedPerUnit=r.fixed; commissionPerUnit=sale*(S.pct/100);
+    } else {
+      const f=S.payFee/100;
+      sale=Math.ceil(f<1?netDes/(1-f):netDes);
+      fixedPerUnit=0; commissionPerUnit=sale*f;
+    }
+  }
+  // Ganancia real del pedido completo:
+  // Ingreso: sale × qty
+  // Costos: (comisión + costo_fijo) × qty [por unidad] + envío [por pedido] + costo_producto × qty
+  const ingresoTotal  = sale * qty;
+  const costoML       = (commissionPerUnit + fixedPerUnit) * qty;
+  const costoProd     = S.cost * qty;
+  const profitTotal   = ingresoTotal - costoML - shipOrder - costoProd;
+  const profitPerUnit = profitTotal / qty;
+  const marginPct     = sale > 0 ? (profitPerUnit / sale) * 100 : 0;
+  return{
+    sale, fixedPerUnit, commissionPerUnit,
+    shipOrder, shipPerUnit: shipOrder/qty,
+    tierIdx:ti, tierLbl:tier.lbl,
+    profit:profitPerUnit, profitTotal, marginPct
+  };
+}
+
+function drawChart(rows){
+  const canvas=$('profitChart');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth,H=canvas.offsetHeight;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const dark=S.theme==='dark';
+  const gridC=dark?'#252c42':'#d0d6e8';
+  const textC=dark?'#6a7490':'#6b7896';
+  const labelC=dark?'#e6e9f4':'#1a2035';
+  const ACOL=dark?'#FFE600':'#2e5bdb';
+  const GRN=dark?'#00e676':'#1b8a4c';
+  const RED=dark?'#ef5350':'#c62828';
+  const ONG=dark?'#ff8f00':'#c45100';
+  const BGBASE=dark?'#0d1018':'#edf0f7';
+
+  ctx.clearRect(0,0,W,H);
+  const PAD={top:28,right:24,bottom:44,left:72};
+  const cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
+  const pts=rows.map(r=>r.profitTotal);
+  const maxP=Math.max(...pts,1),minP=Math.min(...pts,0);
+  const range=maxP-minP||1;
+  const n=rows.length;
+  const xOf=i=>PAD.left+(i/(n-1))*cW;
+  const yOf=v=>PAD.top+cH-((v-minP)/range)*cH;
+
+  ctx.setLineDash([4,4]);ctx.strokeStyle=gridC;ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const val=minP+(range*i/4);const y=yOf(val);
+    ctx.beginPath();ctx.moveTo(PAD.left,y);ctx.lineTo(PAD.left+cW,y);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=textC;ctx.font=`500 10px 'DM Mono',monospace`;ctx.textAlign='right';
+    ctx.fillText('$'+fmtCLP(Math.round(val)),PAD.left-6,y+4);
+    ctx.setLineDash([4,4]);
+  }
+  ctx.setLineDash([]);
+
+  if(minP<0&&maxP>0){const zy=yOf(0);ctx.strokeStyle=dark?'#313a55':'#b8c0d8';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(PAD.left,zy);ctx.lineTo(PAD.left+cW,zy);ctx.stroke();}
+
+  // gradient fill
+  const grad=ctx.createLinearGradient(0,PAD.top,0,PAD.top+cH);
+  grad.addColorStop(0,dark?'rgba(255,230,0,.12)':'rgba(46,91,219,.1)');
+  grad.addColorStop(1,dark?'rgba(255,230,0,0)':'rgba(46,91,219,0)');
+  ctx.beginPath();
+  rows.forEach((r,i)=>{const x=xOf(i),y=yOf(r.profitTotal);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.lineTo(xOf(n-1),PAD.top+cH);ctx.lineTo(xOf(0),PAD.top+cH);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+
+  // line
+  ctx.beginPath();
+  rows.forEach((r,i)=>{const x=xOf(i),y=yOf(r.profitTotal);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.strokeStyle=ACOL;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
+
+  // tier change
+  rows.forEach((r,i)=>{
+    if(r.tierChanged){
+      const x=xOf(i);
+      ctx.strokeStyle=ONG;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(x,PAD.top+14);ctx.lineTo(x,PAD.top+cH);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=ONG;ctx.font=`bold 9px 'DM Sans',sans-serif`;ctx.textAlign='center';
+      ctx.fillText('↑'+r.tierLbl,x,PAD.top+11);
+    }
+  });
+
+  // dots + labels
+  rows.forEach((r,i)=>{
+    const x=xOf(i),y=yOf(r.profitTotal);
+    const col=ACOL; // Se eliminan los colores verde/rojo para mejor/peor
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.strokeStyle=BGBASE;ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=col;ctx.font=`700 10px 'DM Mono',monospace`;ctx.textAlign='center';
+    ctx.fillText('$'+fmtCLP(Math.round(r.profitTotal)),x,y>PAD.top+22?y-10:y+18);
+    ctx.fillStyle=labelC;ctx.font=`600 11px 'DM Sans',sans-serif`;
+    ctx.fillText(r.qty+'ud'+(r.qty>1?'s':'.'),x,H-PAD.bottom+16);
+  });
+}
+
+function updatePFRows(){
+  const map={25:'pf25',50:'pf50',100:'pf100',150:'pf150',200:'pf200'};
+  Object.values(map).forEach(id=>{const el=$(id);if(el)el.classList.remove('pf-active');});
+  const closest=[25,50,100,150,200].reduce((a,b)=>Math.abs(b-S.margin)<Math.abs(a-S.margin)?b:a);
+  const el=$(map[closest]);if(el)el.classList.add('pf-active');
+}
+
+function calc(){
+  const base=calcForQty(1);
+  const hv=$('heroPrice');
+  hv.textContent='$'+fmtCLP(base.sale);
+  hv.classList.remove('pop');void hv.offsetWidth;hv.classList.add('pop');
+  const chName=S.channel==='ml'?(S.pct<=13.5?'Clásica':'Premium'):'Por mi cuenta';
+  $('heroSub').textContent=`1 unidad · ${S.physical?'Blue '+base.tierLbl+' ($'+fmtCLP(base.shipOrder)+')':'Sin envío'} · ${S.channel==='ml'?'ML '+chName+' '+S.pct+'%':chName+(S.payFee>0?' '+S.payFee+'%':' sin comisión')} · Markup ${S.margin}%`;
+
+  $('bSale').textContent='$'+fmtCLP(base.sale);
+  $('bComLbl').textContent=S.channel==='ml'?`− Comisión ML (${S.pct}%)`:`− Comisión (${S.payFee}%)`;
+  $('bCom').textContent=base.commissionPerUnit>0?'−$'+fmtCLP(base.commissionPerUnit):'$0';
+  $('bFixedRow').style.display=S.channel==='ml'?'':'none';
+  $('bFixed').textContent='−$'+fmtCLP(base.fixedPerUnit);
+  $('tramoPill').textContent=getTramo(base.sale);
+  $('tramoPill').className=base.fixedPerUnit===0?'pill green':'pill';
+  $('bShipRow').style.display=S.physical?'':'none';
+  $('bShipLbl').textContent=`− Envío Blue (${base.tierLbl})`;
+  $('bShip').textContent='−$'+fmtCLP(base.shipOrder);
+  $('bCostD').textContent='−$'+fmtCLP(S.cost);
+  $('bProfit').textContent='$'+fmtCLP(base.profit);
+  $('bProfit').className='v '+(base.profit>=0?'pos':'neg');
+
+  const mp=base.marginPct;
+  $('marginDisp').textContent=mp.toFixed(1)+'%';
+  $('markupDisp').textContent=S.margin+'%';
+  const bc=mp<20?'var(--r2)':mp<35?'var(--o)':mp<50?'var(--ac)':'var(--g)';
+  $('gfill').style.cssText=`width:${Math.min(100,mp*1.5)}%;background:${bc};`;
+  $('marginDisp').style.color=bc;
+  const tagTxt=mp<20?'Peligroso':mp<35?'Mínimo viable':mp<50?'Saludable':'Fuerte';
+  const tagBg=mp<20?'color-mix(in srgb,var(--r2) 12%,transparent)':mp<35?'color-mix(in srgb,var(--o) 12%,transparent)':mp<50?'color-mix(in srgb,var(--ac) 12%,transparent)':'color-mix(in srgb,var(--g) 12%,transparent)';
+  $('gtag').textContent=tagTxt;
+  $('gtag').style.cssText=`background:${tagBg};color:${bc};font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;display:inline-block;margin-top:2px;`;
+
+  // rows — precio fijo = precio publicado (1 unidad)
+  let bestPT=-Infinity,worstPT=Infinity,bestQ=1,worstQ=1;
+  const rows=[];let prevTier=-1;
+  for(let q=1;q<=8;q++){
+    const r=calcForQty(q,base.sale);
+    const tierChanged=prevTier!==-1&&r.tierIdx!==prevTier;
+    prevTier=r.tierIdx;
+    rows.push({...r,qty:q,tierChanged});
+    if(r.profitTotal>bestPT){bestPT=r.profitTotal;bestQ=q;}
+    if(r.profitTotal<worstPT){worstPT=r.profitTotal;worstQ=q;}
+  }
+
+  const tb=$('panBody');tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const badge=''; // Eliminadas las etiquetas mejor/peor
+    const tb2=r.tierChanged
+      ?`<span class="ship-change"><svg class="ic" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>${r.tierLbl}</span>`
+      :`<span class="ship-same">${r.tierLbl}</span>`;
+    const pc=r.profitTotal>=0?'pos':'neg';
+    const buyerTotal = r.sale * r.qty;
+    const canReplenish = r.profitTotal > 0 && S.cost > 0 ? Math.floor(r.profitTotal / S.cost) : 0;
+    let reinvestTxt;
+    if(r.profitTotal <= 0){
+      reinvestTxt = '<span style="color:var(--r2)">Sin reinversión</span>';
+    } else if(canReplenish === 0){
+      reinvestTxt = `<span style="font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);">$${fmtCLP(r.profitTotal)} acumulado</span>`;
+    } else {
+      reinvestTxt = `<span class="reinvest">${canReplenish} unidad${canReplenish>1?'es':''}</span><span style="font-family:'DM Sans',sans-serif;font-size:10px;color:var(--muted);margin-left:4px;">de stock</span>`;
+    }
+    tr.innerHTML=`
+      <td class="lbl">${r.qty} unidad${r.qty>1?'es':''}${badge}</td>
+      <td>${tb2}</td>
+      <td class="ac">$${fmtCLP(buyerTotal)}</td>
+      <td class="${pc}">$${fmtCLP(r.shipOrder)}</td>
+      <td class="${pc}">$${fmtCLP(r.profitTotal)}</td>
+      <td>${reinvestTxt}</td>`;
+    tb.appendChild(tr);
+  });
+
+  drawChart(rows);
+  updatePFRows();
+  updateTallaCards();
+
+  let html='';
+  if(base.sale<1100&&S.channel==='ml')
+    html+=`<div class="alert err"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Precio ($${fmtCLP(base.sale)}) bajo mínimo ML ($1.100). Sube el markup.</span></div>`;
+  if(base.profit<0)
+    html+=`<div class="alert err"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>Con esta configuración <strong>pierdes dinero</strong>. Aumenta el markup.</span></div>`;
+  if(base.sale>=19990&&S.channel==='ml'&&S.physical)
+    html+=`<div class="alert warn"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg><span>Sobre $19.990 en ML debes ofrecer envío gratis al comprador.</span></div>`;
+  $('alertZone').innerHTML=html;
+}
+
+// ── Helpers for formatted inputs ────────────────────────────────
+function setCost(val){
+  S.cost = Math.max(0, Math.round(val));
+  cEl.value = S.cost > 0 ? fmtCLP(S.cost) : '0';
+  calc();
+}
+function setWeight(val){
+  S.weightPerUnit = Math.max(0.1, Math.round(val * 10) / 10);
+  wEl.value = fmtKg(S.weightPerUnit);
+  calc();
+}
+function setCustomFee(val){
+  S.payFee = Math.max(0, Math.round(val * 100) / 100);
+  const cfEl = $('customFeeInput');
+  cfEl.value = S.payFee.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  calc();
+}
+
+// ── Cost input: real-time CLP format + arrow keys ±500 ──────────
+const cEl = $('costInput');
+cEl.addEventListener('input', e => {
+  const raw = parseCLP(e.target.value);
+  // Format in real-time preserving cursor-like feel
+  const formatted = raw > 0 ? fmtCLP(raw) : '';
+  e.target.value = formatted;
+  S.cost = raw;
+  calc();
+});
+cEl.addEventListener('focus', e => {
+  // Select all for easy replacement
+  e.target.select();
+});
+cEl.addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp')   { e.preventDefault(); setCost(S.cost + 500); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); setCost(Math.max(0, S.cost - 500)); }
+  if (e.key === 'Enter')     { cEl.blur(); }
+});
+
+// ── Weight input: arrow keys ±0.1 ───────────────────────────────
+const wEl = $('weightInput');
+wEl.addEventListener('focus', e => { e.target.select(); });
+wEl.addEventListener('blur',  e => {
+  S.weightPerUnit = Math.max(0.1, parseKg(e.target.value));
+  e.target.value = fmtKg(S.weightPerUnit);
+  calc();
+});
+wEl.addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp')   { e.preventDefault(); setWeight(S.weightPerUnit + 0.1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); setWeight(Math.max(0.1, S.weightPerUnit - 0.1)); }
+  if (e.key === 'Enter')     { wEl.blur(); }
+});
+
+// ── Physical toggle ──────────────────────────────────────────────
+$('physTog').addEventListener('change', e => {
+  S.physical = e.target.checked;
+  $('weightSection').style.display = S.physical ? '' : 'none';
+  calc();
+});
+
+// ── Channel tabs ─────────────────────────────────────────────────
+document.querySelectorAll('.chtab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.chtab').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    S.channel = t.dataset.ch;
+    $('mlConfig').style.display  = S.channel === 'ml'  ? '' : 'none';
+    $('ownConfig').style.display = S.channel === 'own' ? '' : 'none';
+    calc();
+  });
+});
+
+// ── Pub tabs ─────────────────────────────────────────────────────
+document.querySelectorAll('.pubtab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.pubtab').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    S.pct = +t.dataset.pct;
+    calc();
+  });
+});
+
+// ── Payment buttons + custom fee ─────────────────────────────────
+const cfWrap = $('customFeeWrap');
+const cfEl   = $('customFeeInput');
+
+document.querySelectorAll('.paybtn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.paybtn').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    if (b.dataset.fee === 'custom') {
+      cfWrap.classList.add('show');
+      S.payFee = parseFloat(cfEl.value.replace(',','.')) || 0;
+      cfEl.focus();
+    } else {
+      cfWrap.classList.remove('show');
+      S.payFee = parseFloat(b.dataset.fee) || 0;
+    }
+    calc();
+  });
+});
+
+// Custom fee input: real-time + arrow keys ±0.01
+cfEl.addEventListener('focus', e => { e.target.select(); });
+cfEl.addEventListener('input', e => {
+  const raw = parseFloat(e.target.value.replace(',','.')) || 0;
+  S.payFee = Math.max(0, raw);
+  calc();
+});
+cfEl.addEventListener('blur', e => {
+  setCustomFee(S.payFee);
+});
+cfEl.addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp')   { e.preventDefault(); setCustomFee(S.payFee + 0.01); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); setCustomFee(Math.max(0, S.payFee - 0.01)); }
+  if (e.key === 'Enter')     { cfEl.blur(); }
+});
+
+// ── Markup: Profit First rows as buttons ─────────────────────────
+const MG_VALS = [25, 50, 100, 150, 200];
+
+function setMarkup(val) {
+  S.margin = val;
+  $('mg').value = val;
+  $('mgLbl').textContent = val + '%';
+  updatePFRows();
+  calc();
+}
+
+// Click on any pfrow sets that markup
+document.querySelectorAll('.pfrow[data-mg]').forEach(row => {
+  row.addEventListener('click', () => setMarkup(+row.dataset.mg));
+});
+
+// Slider
+$('mg').addEventListener('input', e => {
+  S.margin = +e.target.value;
+  $('mgLbl').textContent = S.margin + '%';
+  updatePFRows();
+  calc();
+});
+
+// Mouse wheel on slider
+$('mg').addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? 5 : -5;
+  const newVal = Math.min(300, Math.max(0, S.margin + delta));
+  S.margin = newVal;
+  $('mg').value = newVal;
+  $('mgLbl').textContent = newVal + '%';
+  updatePFRows();
+  calc();
+}, { passive: false });
+
+// ── Theme ────────────────────────────────────────────────────────
+$('themeBtn').addEventListener('click', () => {
+  S.theme = S.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', S.theme);
+  $('iconMoon').style.display = S.theme === 'dark'  ? '' : 'none';
+  $('iconSun').style.display  = S.theme === 'light' ? '' : 'none';
+  calc();
+});
+
+window.addEventListener('resize', () => calc());
+calc();
+
+// ── Integración Cohere AI ───────────────────────────────────────
+const COHERE_API_KEY = 'O7uJdyecdMQZRTORvCkF0HpuNkXHjtyO6TKDsT0b';
+const chatInput = $('chatInput');
+const chatHistory = $('chatHistory');
+const chatSendBtn = $('chatSendBtn');
+
+let isDebugMode = false;
+let cohereChatHistory = []; // Memoria de contexto para la IA
+
+// Instrucciones estrictas con Few-Shot Prompting
+const SYSTEM_PROMPT = `Eres el asistente de una calculadora de precios para Mercado Libre Chile y ventas independientes.
+Devuelve ÚNICAMENTE un objeto JSON válido. NO uses formato markdown.
+
+REGLAS DE EXTRACCIÓN (Los campos son OPCIONALES, incluye solo lo que cambie, excepto "msg" que es OBLIGATORIO):
+- "cost": (entero) Costo en CLP. Inventa un precio mayorista si nombran un producto sin dar precio.
+- "weight": (decimal) Peso en kg. Estímalo si es un producto físico nuevo.
+- "margin": (entero) Porcentaje de ganancia.
+- "physical": (booleano) ¡CRÍTICO! Si el usuario dice "sin blue", "sin envío" o "retiro", DEBES INCLUIR "physical": false. Si pide "con blue", DEBES INCLUIR "physical": true.
+- "channel": "ml" (Mercado Libre) o "own" (Por mi cuenta).
+- "pct": (entero) 11 (Clásica) o 16 (Premium).
+- "payFee": (numérico) Ej: 0, 1.19, 1.9, 2.38...
+- "msg": (cadena) OBLIGATORIO. Tu respuesta charlando.
+
+REGLAS DE MEMORIA Y ACTUALIZACIÓN PARCIAL:
+1. PRODUCTO NUEVO: Si mencionan un producto nuevo, estima "cost" y "weight". ¡Si en la misma frase dicen "sin blue", NO OLVIDES incluir "physical": false!
+   - Ejemplo: "vender un six pack de coca cola por mi cuenta sin blue" -> {"cost": 4500, "weight": 6, "channel": "own", "physical": false, "msg": "..."}
+2. MODIFICACIÓN AISLADA: Si piden cambiar SOLO una cosa, devuelve SOLO la clave afectada y "msg".
+   - Ejemplo "ahora con blue": {"physical": true, "msg": "..."}
+   - Ejemplo "mejor premium": {"pct": 16, "channel": "ml", "msg": "..."}
+   - Ejemplo "cuéntame un chiste": {"msg": "..."}`;
+
+// Lógica del botón Debug
+$('debugBtn').addEventListener('click', () => {
+  isDebugMode = !isDebugMode;
+  $('debugBtn').classList.toggle('debug-on', isDebugMode);
+  
+  // Actualizar en vivo todos los mensajes del chat
+  document.querySelectorAll('.chat-msg').forEach(div => {
+    if (div.dataset.raw) {
+      const span = div.querySelector('.msg-content');
+      span.textContent = isDebugMode ? div.dataset.raw : div.dataset.msg;
+      span.style.fontFamily = isDebugMode ? "'DM Mono', monospace" : "inherit";
+      span.style.whiteSpace = isDebugMode ? "pre-wrap" : "normal"; // Para que el JSON se vea bien
+    }
+  });
+});
+
+function appendMessage(sender, text, rawJson = null) {
+  const div = document.createElement('div');
+  div.classList.add('chat-msg');
+  div.style.padding = '8px 12px';
+  div.style.borderRadius = '6px';
+  div.style.maxWidth = '85%';
+  div.style.alignSelf = sender === 'Tú' ? 'flex-end' : 'flex-start';
+  div.style.background = sender === 'Tú' ? 'var(--ac-bg)' : 'var(--bg2)';
+  div.style.border = `1px solid ${sender === 'Tú' ? 'var(--ac)' : 'var(--border2)'}`;
+  div.style.color = sender === 'Tú' ? 'var(--ac)' : 'var(--text)';
+  
+  if (sender === 'IA' && rawJson) {
+    div.dataset.raw = rawJson;
+    div.dataset.msg = text;
+    const content = isDebugMode ? rawJson : text;
+    const font = isDebugMode ? "'DM Mono', monospace" : "inherit";
+    const wrap = isDebugMode ? "pre-wrap" : "normal";
+    div.innerHTML = `<span class="msg-content" style="font-family: ${font}; white-space: ${wrap}; display: block;">${content}</span>`;
+  } else {
+    div.innerHTML = `<span style="font-family: ${sender === 'IA' ? "'DM Mono', monospace" : "inherit"}">${text}</span>`;
+  }
+  
+  chatHistory.appendChild(div);
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+async function sendToCohere() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+
+  appendMessage('Tú', text);
+  chatInput.value = '';
+  chatSendBtn.style.opacity = '0.5';
+  chatSendBtn.disabled = true;
+
+  try {
+    const response = await fetch('https://api.cohere.ai/v1/chat', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${COHERE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'accept': 'application/json'
+      },
+      body: JSON.stringify({
+        message: text,
+        preamble: SYSTEM_PROMPT,
+        chat_history: cohereChatHistory, // Le enviamos la memoria de la conversación
+        temperature: 0.2 // Muy baja temperatura para precisión matemática
+      })
+    });
+
+    const data = await response.json();
+    let iaResponse = data.text;
+
+    // Limpiar markdown en caso de que la IA ignore la regla
+    iaResponse = iaResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // Validar e inyectar
+    try {
+        const config = JSON.parse(iaResponse);
+        const displayMsg = config.msg || "Configuración aplicada exitosamente.";
+        
+        // Pasamos el mensaje limpio y el raw string para el modo debug
+        const prettyJson = JSON.stringify(config, null, 2); 
+        appendMessage('IA', displayMsg, prettyJson);
+        applyAIConfig(config);
+        
+        // Si todo fue exitoso, guardamos esto en el historial para darle contexto a las futuras preguntas
+        cohereChatHistory.push({ role: "USER", message: text });
+        cohereChatHistory.push({ role: "CHATBOT", message: iaResponse });
+        
+    } catch (parseError) {
+        // Fallback si la IA se sale completamente del formato JSON
+        appendMessage('IA', iaResponse);
+    }
+
+  } catch (error) {
+    console.error("Error en IA:", error);
+    appendMessage('Error', 'No se pudo procesar la solicitud.');
+  } finally {
+    chatSendBtn.style.opacity = '1';
+    chatSendBtn.disabled = false;
+  }
+}
+
+function applyAIConfig(config) {
+  // Solo se actualizan las claves que vienen en el JSON (Actualización parcial)
+  if (config.cost !== undefined) setCost(config.cost);
+  if (config.weight !== undefined) setWeight(config.weight);
+  if (config.margin !== undefined) setMarkup(config.margin);
+  
+  // Cambiar canal de venta
+  if (config.channel !== undefined) {
+    S.channel = config.channel;
+    document.querySelectorAll('.chtab').forEach(x => x.classList.remove('on'));
+    const tab = document.querySelector(`.chtab[data-ch="${S.channel}"]`);
+    if (tab) tab.classList.add('on');
+    
+    $('mlConfig').style.display  = S.channel === 'ml'  ? '' : 'none';
+    $('ownConfig').style.display = S.channel === 'own' ? '' : 'none';
+  }
+
+  // Activar Premium vs Clásica en ML
+  if (config.pct !== undefined) {
+    // Si la IA manda un porcentaje de ML, forzamos la vista a ML por seguridad
+    if (S.channel !== 'ml') {
+      S.channel = 'ml';
+      document.querySelectorAll('.chtab').forEach(x => x.classList.remove('on'));
+      const cTab = document.querySelector('.chtab[data-ch="ml"]');
+      if (cTab) cTab.classList.add('on');
+      $('mlConfig').style.display  = '';
+      $('ownConfig').style.display = 'none';
+    }
+    
+    S.pct = config.pct;
+    document.querySelectorAll('.pubtab').forEach(x => x.classList.remove('on'));
+    const tab = document.querySelector(`.pubtab[data-pct="${S.pct}"]`);
+    if (tab) tab.classList.add('on');
+  }
+
+  // Medio de pago si el canal es "Por mi cuenta"
+  if (config.payFee !== undefined && S.channel === 'own') {
+    S.payFee = config.payFee;
+    document.querySelectorAll('.paybtn').forEach(x => x.classList.remove('on'));
+    
+    const btn = document.querySelector(`.paybtn[data-fee="${config.payFee}"]`);
+    if (btn) {
+      btn.classList.add('on');
+      $('customFeeWrap').classList.remove('show');
+    } else {
+      const customBtn = document.querySelector('.paybtn[data-fee="custom"]');
+      if (customBtn) customBtn.classList.add('on');
+      $('customFeeWrap').classList.add('show');
+      const cfEl = $('customFeeInput');
+      cfEl.value = S.payFee.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+  }
+
+  // Activar o desactivar Blue Express
+  if (config.physical !== undefined) {
+    S.physical = config.physical;
+    $('physTog').checked = config.physical;
+    $('weightSection').style.display = S.physical ? '' : 'none';
+  }
+  
+  calc();
+}
+
+chatSendBtn.addEventListener('click', sendToCohere);
+chatInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    sendToCohere();
+  }
+});
+</script>
+</body>
+</html>
