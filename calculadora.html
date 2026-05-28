@@ -233,13 +233,11 @@ svg.ic{display:inline-block;vertical-align:middle;flex-shrink:0;}
     <div class="hbadge">ML + Blue Express</div>
   </div>
   <div class="hright">
-    <!-- Botón Debug -->
     <button class="theme-btn" id="debugBtn" title="Activar/Desactivar Modo Debug (Ver JSON)">
       <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-3.9"/><path d="M6.53 15H3"/><path d="M21 15h-3.53"/><path d="M6.53 21c-1.93.2-3.53 1.9-3.53 3.9"/><path d="M17.47 21c1.93.2 3.53 1.9 3.53 3.9"/>
       </svg>
     </button>
-    <!-- Botón Tema -->
     <button class="theme-btn" id="themeBtn" title="Cambiar tema claro / oscuro">
       <svg id="iconMoon" class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg id="iconSun"  class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -886,28 +884,26 @@ const chatSendBtn = $('chatSendBtn');
 let isDebugMode = false;
 let cohereChatHistory = []; // Memoria de contexto para la IA
 
-// Instrucciones estrictas (Prompt Engineering avanzado con protección contra sobreescritura)
+// Instrucciones estrictas con Mapeo Fuerte y Matemáticas
 const SYSTEM_PROMPT = `Eres el asistente de una calculadora de precios para Mercado Libre Chile y ventas independientes.
 Devuelve ÚNICAMENTE un objeto JSON válido. NO uses formato markdown.
 
 REGLAS DE EXTRACCIÓN (Los campos son OPCIONALES, incluye solo lo que cambie, excepto "msg" que es OBLIGATORIO):
-- "cost": (entero) Costo en CLP. Inventa un precio mayorista realista si nombran un producto sin dar precio.
-- "weight": (decimal) Peso en kg. Estímalo obligatoriamente si nombran un producto nuevo.
-- "margin": (entero) Porcentaje de ganancia deseado.
-- "physical": (booleano) IMPORTANTE: Por defecto es false (sin envío). Ponlo en true SOLO si piden explícitamente "con blue", "envío", o similar.
+- "cost": (entero) Costo en CLP. Inventa un precio mayorista si nombran un producto sin dar precio.
+- "weight": (decimal) Peso en kg. Estímalo obligatoriamente si es un producto físico nuevo. SÉ PRECISO Y MATEMÁTICO: si el usuario menciona cantidades y volúmenes (ej. "sixpack de 360ml"), CALCULA el peso real (6 * 0.36 = 2.16 kg). No adivines cifras irreales.
+- "margin": (entero) Porcentaje de ganancia.
+- "physical": (booleano) ¡CRÍTICO! Si el usuario dice "sin blue", "sin envío" o "retiro", DEBES INCLUIR "physical": false. Si pide "con blue", DEBES INCLUIR "physical": true.
 - "channel": "ml" (Mercado Libre) o "own" (Por mi cuenta).
 - "pct": (entero) 11 (Clásica) o 16 (Premium).
 - "payFee": (numérico) ¡OBLIGATORIO usar estos valores exactos si los nombran!: Efectivo/Transferencia=0, Khipu=1.19, Webpay Débito=1.9, Webpay Crédito=2.38, Mercado Pago=2.69, Flow=3.44, SumUp=3.58. Si piden un medio distinto a estos, asume su comisión o usa 0.
 - "msg": (cadena) OBLIGATORIO. Tu respuesta charlando.
 
-REGLAS DE MEMORIA Y ACTUALIZACIÓN PARCIAL (¡CRÍTICO!):
-Tienes contexto del historial de chat.
-1. PRODUCTO NUEVO: Si mencionan un producto por primera vez, estima todo (cost, weight) aunque physical sea false. (Ej: {"cost": 15000, "weight": 5.5, "physical": false, "channel": "ml", "msg": "..."})
-2. MODIFICACIÓN AISLADA: Si el usuario pide cambiar SOLO una cosa (ej: "quiero usar blue", "mejor premium", "chiste"), devuelve SOLO la clave afectada y "msg". ¡NO reescribas cost, weight ni margin si no te lo piden explícitamente!
-   - Ejemplo "quiero usar blue": {"physical": true, "msg": "Activado el envío por Blue."}
-   - Ejemplo "ponlo en premium": {"pct": 16, "channel": "ml", "msg": "Cambiado a Premium."}
-   - Ejemplo "usaré SumUp": {"payFee": 3.58, "channel": "own", "msg": "Configurado con la comisión de SumUp."}
-   - Ejemplo "cuéntame un chiste": {"msg": "Aquí va un chiste..."}`;
+REGLAS DE MEMORIA Y ACTUALIZACIÓN PARCIAL:
+1. PRODUCTO NUEVO: Si mencionan un producto nuevo, estima "cost" y "weight". ¡Si en la misma frase dicen "sin blue", NO OLVIDES incluir "physical": false!
+   - Ejemplo: "vender un sixpack de latas de 360ml cocacola por mis medios usando SumUp" -> {"cost": 4500, "weight": 2.16, "channel": "own", "payFee": 3.58, "msg": "..."}
+2. MODIFICACIÓN AISLADA: Si piden cambiar SOLO una cosa, devuelve SOLO la clave afectada y "msg".
+   - Ejemplo "ahora con blue": {"physical": true, "msg": "..."}
+   - Ejemplo "mejor premium": {"pct": 16, "channel": "ml", "msg": "..."}`;
 
 // Lógica del botón Debug
 $('debugBtn').addEventListener('click', () => {
@@ -972,7 +968,7 @@ async function sendToCohere() {
         message: text,
         preamble: SYSTEM_PROMPT,
         chat_history: cohereChatHistory, // Le enviamos la memoria de la conversación
-        temperature: 0.2 // Muy baja temperatura para precisión matemática
+        temperature: 0.1 // Temperatura casi nula para extrema precisión y evitar alucinaciones
       })
     });
 
@@ -1050,6 +1046,7 @@ function applyAIConfig(config) {
     S.payFee = config.payFee;
     document.querySelectorAll('.paybtn').forEach(x => x.classList.remove('on'));
     
+    // Forzar coincidencia estricta en base a los números exactos
     const btn = document.querySelector(`.paybtn[data-fee="${config.payFee}"]`);
     if (btn) {
       btn.classList.add('on');
